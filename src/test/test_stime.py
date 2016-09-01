@@ -72,6 +72,18 @@ class TestSTime(unittest.TestCase):
         t3 = stime.STime(hour=23, minute=45)
         t = t3 + 150
         self.assertTrue(t.hour == 2 and t.minute == 15, "Expected 02:15, get %s" % t)
+        
+    def test_set(self):
+        '''
+        Test set method
+        '''
+        t = stime.STime()
+        t.set("2:3")
+        self.assertTrue(t.hour == 2 and t.minute == 3)
+        t.set("05:02")
+        self.assertTrue(t.hour == 5 and t.minute == 2)
+
+        self.assertRaises(ValueError, t.set, "abc")
 
     def test_now(self):
         '''

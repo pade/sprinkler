@@ -49,6 +49,19 @@ class STime(object):
         (nbhour, minute) = ((self.minute + pNbMinutes)//60, (self.minute + pNbMinutes)%60)
         hour = (self.hour + nbhour)%24
         return STime(hour=hour, minute=minute)
+    
+    def set(self, pStr):
+        '''
+        Set STime object with the string in argument
+        @param pStr: Time string, format: "HH:MM" 
+        '''
+        try:
+            hour, minute = map(int, pStr.split(':'))
+        except:
+            raise ValueError
+        
+        self.hour, self.minute = hour, minute
+        
 
     @classmethod
     def now(cls):
