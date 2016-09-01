@@ -84,6 +84,17 @@ class TestSTime(unittest.TestCase):
         self.assertTrue(t.hour == 5 and t.minute == 2)
 
         self.assertRaises(ValueError, t.set, "abc")
+        
+    def test_toDateTime(self):
+        '''
+        Test toDateTime method
+        '''
+        now = datetime.today()
+        t = stime.STime(5,20)
+        dt = t.toDateTime()
+        self.assertTrue(dt.year == now.year and dt.month == now.month and 
+                        dt.day == now.day and dt.hour == t.hour and dt.minute == t.minute)
+        
 
     def test_now(self):
         '''

@@ -62,6 +62,14 @@ class STime(object):
         
         self.hour, self.minute = hour, minute
         
+    def toDateTime(self):
+        '''
+        Convert STime to datetime object
+        with current day, month and year
+        '''        
+        now = datetime.today()
+        return datetime(now.year, now.month, now.day, self.hour, self.minute)
+        
 
     @classmethod
     def now(cls):
