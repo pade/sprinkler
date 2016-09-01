@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 '''
-Created on 29 ao�t 2016
+Created on 29 août 2016
 
 @author: dassierp
 '''
