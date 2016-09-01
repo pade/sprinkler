@@ -39,9 +39,6 @@ class TestSTime(unittest.TestCase):
         
         t = stime.STime(hour=5, minute=-1)
         self.assertTrue(t.hour == 5 and t.minute == 0)
-        
-        t = stime.STime(1, hour=2, minute=10)
-        self.assertTrue(t.day == 1 and t.hour == 2 and t.minute == 10)
 
     def test_intoMinutes(self):
         
@@ -53,48 +50,28 @@ class TestSTime(unittest.TestCase):
         '''
         Test print STime
         '''
-        str_stime = "%s" % stime.STime(day=1, hour=12, minute=10)
-        self.assertTrue(str_stime == "[Mon] 12:10")
+        str_stime = "%s" % stime.STime(hour=12, minute=10)
+        self.assertTrue(str_stime == "12:10")
         
-        str_stime = "%s" % stime.STime(day=5, hour=1, minute=2)
-        self.assertTrue(str_stime == "[Fri] 01:02")
+        str_stime = "%s" % stime.STime(hour=1, minute=2)
+        self.assertTrue(str_stime == "01:02")
         
-    def test_add_stime(self):
+    def test_add(self):
         '''
         Test add function with STime class
         '''
-        t1 = stime.STime(day=1, hour=2, minute=10)
+        t1 = stime.STime(hour=2, minute=10)
         
-        t2 = stime.STime(day=0, hour=0, minute=20)
-        t3 = t1 + t2
-        self.assertTrue(t3.hour == 2 and t3.minute == 30)
-        
-        t2 = stime.STime(hour=0, minute=55)
-        t3 = t1 + t2
-        self.assertTrue(t3.hour == 3 and t3.minute == 5)
+        t = t1 + 130
+        self.assertTrue(t.hour == 4 and t.minute == 20)
         
         t2 = stime.STime(hour=23, minute=10)
-        t3 = t1 + t2
-        self.assertTrue(t3.day == 2 and t3.hour == 1 and t3.minute == 20)
+        t = t2 + 60
+        self.assertTrue(t.hour == 0 and t.minute == 10)
         
-        t2 = stime.STime(hour=23, minute=55)
-        t3 = t1 + t2
-        self.assertTrue(t3.day == 2 and t3.hour == 2 and t3.minute == 5, "Expected [Tue] 02:05, get %s" % t3)
-        
-    def test_add_duration(self):
-        '''
-        Test add function with duration
-        '''
-        t = stime.STime(2, 10)
-        
-        t2 = t + 20
-        self.assertTrue(t2.hour == 2 and t2.minute == 30)
-        
-        t2 = t + 90
-        self.assertTrue(t2.hour == 3 and t2.minute == 40)
-        
-        t2 = t + 23 * 60 + 10
-        self.assertTrue(t2.hour == 1 and t2.minute == 20)
+        t3 = stime.STime(hour=23, minute=45)
+        t = t3 + 150
+        self.assertTrue(t.hour == 2 and t.minute == 15, "Expected 02:15, get %s" % t)
 
     def test_now(self):
         '''
