@@ -4,6 +4,10 @@ Created on 29 août 2016
 
 @author: dassierp
 '''
+
+# Ignore PyDev pep8 analysis
+#@PydevCodeAnalysisIgnore
+
 import os
 import sys
 import unittest
