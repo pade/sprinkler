@@ -17,14 +17,20 @@ class Channel():
         @param pChNumber: channel number, from 0 to number of physical channel - 1
         @param pHwInterface: a class derived from BaseGpio
         '''
-        self._nb = pChNumber
-        self._hw = pHwInterface
-        self._logger = logging.getLogger(__name__)
+        self.__nb = pChNumber
+        self.__hw = pHwInterface
+        self.__logger = logging.getLogger(__name__)
 
         # On initialisation, stop water
-        self._state = False
+        self.__state = False
         self.activate(False)
-        self._logger.debug("Initialisation channel %s" % self._nb)
+        self.__logger.debug("Initialisation channel %s" % self.__nb)
+
+    def get_nb(self):
+        return self.__nb
+
+    def get_state(self):
+        return self.__state
 
     def activate(self, pState):
         '''
@@ -32,15 +38,12 @@ class Channel():
         otherwise channel is deactivated
         '''
         if pState is True:
-            self._state = True
-            self._logger.debug("Channel %s ON" % self._nb)
+            self.__state = True
+            self.__logger.debug("Channel %s ON" % self.__nb)
         else:
-            self._state = False
-            self._logger.debug("Channel %s OFF" % self._nb)
-        self._hw.write(self._nb, self._state)
+            self.__state = False
+            self.__logger.debug("Channel %s OFF" % self.__nb)
+        self.__hw.write(self.__nb, self.__state)
 
-    def getState(self):
-        '''
-        @return: boolean, state of the channel
-        '''
-        return self._state
+    nb = property(get_nb, None, None, None)
+    state = property(get_state, None, None, None)

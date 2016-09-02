@@ -12,11 +12,12 @@ class STime(object):
     Spinkler stime
     '''
 
-    def __init__(self, hour=0, minute=0):
+    def __init__(self, hour=0, minute=0, duration=0):
         '''
         Constructor
         @param hour: hour, from 0 to 23. Outside this range, set to range limit
         @param minute: minute, from 0 to 59. Outside this range, set to range limit
+        @param duration: duration of sprinkler, in minutes
         '''
         if hour < 0:
             self.hour = 0
@@ -31,8 +32,10 @@ class STime(object):
         else:
             self.minute = minute
 
+        self.duration = duration
+
     def __str__(self):
-        return "%02d:%02d" % (self.hour, self.minute)
+        return "%02d:%02d [%d]" % (self.hour, self.minute, self.duration)
 
     def intoMinutes(self):
         '''
@@ -52,10 +55,11 @@ class STime(object):
         hour = (self.hour + nbhour) % 24
         return STime(hour=hour, minute=minute)
 
-    def set(self, pStr):
+    def setTime(self, pStr):
         '''
         Set STime object with the string in argument
         @param pStr: Time string, format: "HH:MM"
+        Nota: duration is unchanged
         '''
         try:
             hour, minute = map(int, pStr.split(':'))
@@ -72,10 +76,16 @@ class STime(object):
         now = datetime.today()
         return datetime(now.year, now.month, now.day, self.hour, self.minute)
 
+    def setDuration(self, pDuration):
+        '''
+        Set duration (in minutes)
+        '''
+        self.duration = pDuration
+
     @classmethod
     def now(cls):
         '''
-        @return return a STime object with current TimeoutError
+        @return return a STime object with current time
         '''
         t = datetime.now()
         return cls(hour=t.hour, minute=t.minute)

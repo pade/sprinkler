@@ -23,7 +23,7 @@ class ChannelConfig(object):
         self.day = {'Mon': False, 'Tue': False, 'Wed': False,
                     'Thu': False, 'Fri': False, 'Sat': False, 'Sun': False}
         self.startTime = stime.STime()
-        self.duration = stime.STime()
+        self.duration = 0
         self.activate = False
 
 
