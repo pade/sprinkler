@@ -8,27 +8,30 @@ Created on 30 août 2016
 import json
 import stime
 
+
 class ChannelConfig(object):
     '''
     Configuration of one channel
     '''
-    
+
     def __init__(self, pChannel):
         '''
         Constructor
         @param pChannel: Channel number
         '''
         self.number = pChannel
-        self.day = {'Mon': False, 'Tue': False, 'Wed': False, 'Thu': False, 'Fri': False, 'Sat': False, 'Sun': False}
+        self.day = {'Mon': False, 'Tue': False, 'Wed': False,
+                    'Thu': False, 'Fri': False, 'Sat': False, 'Sun': False}
         self.startTime = stime.STime()
         self.duration = stime.STime()
         self.activate = False
-        
+
+
 class Config(object):
     '''
     Configuration management class
     '''
-    
+
     def __init__(self, pNbOfChannel, pFileName):
         '''
         Constructor
@@ -44,13 +47,14 @@ class Config(object):
         Save configuration into file
         '''
         pass
-    
+
     def load(self):
         '''
         Load configuration from file
         '''
         pass
-    
+
+
 class ConfigEncoder(json.JSONEncoder):
     '''
     Encode configuration into JSON format
@@ -60,6 +64,7 @@ class ConfigEncoder(json.JSONEncoder):
             # TODO: return JSON structure to fill
             pass
         return json.JSONEncoder.default(self.pObj)
+
 
 class ConfigDecoder(json.JSONDecoder):
     '''
