@@ -20,11 +20,25 @@ class ChannelConfig(object):
         @param pChannel: Channel number
         '''
         self.number = pChannel
-        self.day = {'Mon': False, 'Tue': False, 'Wed': False,
-                    'Thu': False, 'Fri': False, 'Sat': False, 'Sun': False}
-        self.startTime = stime.STime()
-        self.duration = 0
+        self.day = {'Mon': [], 'Tue': [], 'Wed': [],
+                    'Thu': [], 'Fri': [], 'Sat': [], 'Sun': []}
         self.activate = False
+
+    def getCfg(self, pDay):
+        '''
+        Get configuration from given day
+        @param pDay: given day
+        @return: list of STime object
+        '''
+        return self.day[pDay]
+
+    def setCfg(self, pDay, pSTime):
+        '''
+        Set configuration for given day
+        @param pDay: given day
+        @param pSTime: STime object
+        '''
+        self.day[pDay].append(pSTime)
 
 
 class Config(object):
@@ -53,6 +67,29 @@ class Config(object):
         Load configuration from file
         '''
         pass
+
+    def setNewCfg(self, pNbChannel, pDay, pSTime):
+        '''
+        Set New configuration
+        @param pNbChannel: channel number
+        @param pDay: day of week: 'Mon', 'Tue', 'Wed',
+                    'Thu', 'Fri', 'Sat' or'Sun'
+        @param pSTime: STime object
+        '''
+        self.cfg[pNbChannel].setCfg(pDay, pSTime)
+
+    def getCfg(self, pNbChannel, pDay=None):
+        '''
+        Get configuration from channel number
+        @param pNbChannel: channel number
+        @param pDay: if not set, return configuration for all days,
+            otherwise, return configuration of the day
+        @return: ChannelConfig object, or list of STime objects
+        '''
+        if pDay is None:
+            return self.cfg[pNbChannel]
+        else:
+            return self.cfg[pNbChannel].day[pDay]
 
 
 class ConfigEncoder(json.JSONEncoder):
