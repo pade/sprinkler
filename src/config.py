@@ -7,6 +7,7 @@ Created on 30 août 2016
 
 import json
 import stime
+import datetime
 
 
 class ChannelConfig(object):
@@ -40,6 +41,27 @@ class ChannelConfig(object):
         '''
         self.day[pDay].append(pSTime)
 
+    def findCfg(self, pDay, pDateTime):
+        '''
+        Try to find a configuration for the given day that match the time
+        Configuration is return when pDateTime is between STime and STime + duration
+        @param pDay: day to looking for
+        @param pDataTime: datetime object
+        @return: None or a list of STime object matching the search
+        '''
+        ret_val = []
+        for t in self.day[pDay]:
+            start = t.toDateTime(pDateTime)
+            end = start + datetime.timedelta(minutes=t.duration)
+            if start <= pDateTime and end > pDateTime:
+                ret_val.append(t)
+
+        if len(ret_val) == 0:
+            # Nothing found
+            return None
+        else:
+            return ret_val
+
 
 class Config(object):
     '''
@@ -52,7 +74,7 @@ class Config(object):
         @param pNbOfChannel: Number of physical channel
         @param pFileName: Filename with path to store configuration
         '''
-        self.cfg = ()
+        self.cfg = []
         for i in range(pNbOfChannel):
             self.cfg.append(ChannelConfig(i))
 
@@ -68,7 +90,7 @@ class Config(object):
         '''
         pass
 
-    def setNewCfg(self, pNbChannel, pDay, pSTime):
+    def addCfg(self, pNbChannel, pDay, pSTime):
         '''
         Set New configuration
         @param pNbChannel: channel number
@@ -76,20 +98,21 @@ class Config(object):
                     'Thu', 'Fri', 'Sat' or'Sun'
         @param pSTime: STime object
         '''
-        self.cfg[pNbChannel].setCfg(pDay, pSTime)
+        if pDay in ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'):
+            if isinstance(pSTime, stime.STime):
+                self.cfg[pNbChannel].setCfg(pDay, pSTime)
+            else:
+                raise ValueError
+        else:
+            raise ValueError
 
-    def getCfg(self, pNbChannel, pDay=None):
+    def getCfg(self, pNbChannel):
         '''
         Get configuration from channel number
         @param pNbChannel: channel number
-        @param pDay: if not set, return configuration for all days,
-            otherwise, return configuration of the day
-        @return: ChannelConfig object, or list of STime objects
+        @return: ChannelConfig object
         '''
-        if pDay is None:
-            return self.cfg[pNbChannel]
-        else:
-            return self.cfg[pNbChannel].day[pDay]
+        return self.cfg[pNbChannel]
 
 
 class ConfigEncoder(json.JSONEncoder):

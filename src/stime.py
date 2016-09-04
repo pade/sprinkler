@@ -68,13 +68,14 @@ class STime(object):
 
         self.hour, self.minute = hour, minute
 
-    def toDateTime(self):
+    def toDateTime(self, pDateTime):
         '''
         Convert STime to datetime object
-        with current day, month and year
+        with day, month and year of pDateTime object
+        @param pDateTime: Original datetime object to take into account
         '''
-        now = datetime.today()
-        return datetime(now.year, now.month, now.day, self.hour, self.minute)
+        return datetime(pDateTime.year, pDateTime.month, pDateTime.day,
+                        self.hour, self.minute)
 
     def setDuration(self, pDuration):
         '''

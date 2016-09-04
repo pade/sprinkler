@@ -97,7 +97,7 @@ class TestSTime(unittest.TestCase):
         '''
         now = datetime.today()
         t = stime.STime(5, 20)
-        dt = t.toDateTime()
+        dt = t.toDateTime(now)
         self.assertTrue(dt.year == now.year and dt.month == now.month and
                         dt.day == now.day and dt.hour == t.hour and dt.minute == t.minute)
 
