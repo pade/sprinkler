@@ -84,6 +84,18 @@ class TestChannelConfig(unittest.TestCase):
         l = ch.findCfg('Mon', d)
         self.assertIsNone(l)
 
+    def test_findCfg2(self):
+        '''
+        Test find configuration around midnight
+        '''
+        t1 = stime.STime(23, 30, 120)
+        # Following date is a monday
+        d1 = datetime.datetime(year=2016, month=9, day=5, hour=23, minute=45)
+        ch = config.ChannelConfig(0)
+        ch.setCfg('Mon', t1)
+        l = ch.findCfg('Mon', d1)
+        self.assertIsNotNone(l)
+
 
 class TestConfig(unittest.TestCase):
 
