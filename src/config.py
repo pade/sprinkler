@@ -9,6 +9,9 @@ import json
 import stime
 import datetime
 
+# Constant
+DAYLIST = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
+
 
 class ChannelConfig(object):
     '''
@@ -51,10 +54,12 @@ class ChannelConfig(object):
         '''
         ret_val = []
         for t in self.day[pDay]:
-            start = t.toDateTime(pDateTime)
-            end = start + datetime.timedelta(minutes=t.duration)
-            if start <= pDateTime and end > pDateTime:
-                ret_val.append(t)
+            # Check if day's of the week are corresponding
+            if pDateTime.weekday() == DAYLIST[pDay]:
+                start = t.toDateTime(pDateTime)
+                end = start + datetime.timedelta(minutes=t.duration)
+                if start <= pDateTime and end > pDateTime:
+                    ret_val.append(t)
 
         if len(ret_val) == 0:
             # Nothing found

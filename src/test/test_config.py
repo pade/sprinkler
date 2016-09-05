@@ -82,7 +82,7 @@ class TestChannelConfig(unittest.TestCase):
         # next day
         d = datetime.datetime(year=2016, month=9, day=6, hour=1, minute=30)
         l = ch.findCfg('Mon', d)
-        self.assertIsNone(l, "Expected None, get %s" % l[0])
+        self.assertIsNone(l)
 
 
 class TestConfig(unittest.TestCase):
