@@ -15,4 +15,6 @@ pep8:
 	@pep8 . --exclude="docs,test*" --max-line-length=90 --ignore=E127,E265
 	@echo "Done."
 
-check: test cov pep8
+
+
+check: cov pep8
