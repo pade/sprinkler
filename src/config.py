@@ -5,9 +5,11 @@ Created on 30 août 2016
 @author: dassierp
 '''
 
+import os.path
 import json
 import stime
 import datetime
+import jsonpickle
 
 
 class ChannelConfig(object):
@@ -74,21 +76,35 @@ class Config(object):
         @param pNbOfChannel: Number of physical channel
         @param pFileName: Filename with path to store configuration
         '''
-        self.cfg = []
+        self._filename = pFileName
+        self._cfg = []
         for i in range(pNbOfChannel):
-            self.cfg.append(ChannelConfig(i))
+            self._cfg.append(ChannelConfig(i))
 
     def save(self):
         '''
         Save configuration into file
         '''
-        pass
+        try:
+            f = open(self._filename, 'w')
+            json_obj = jsonpickle.encode(self._cfg)
+            f.write(json_obj)
+            f.close()
+        except:
+            raise IOError
 
     def load(self):
         '''
         Load configuration from file
         '''
-        pass
+        if os.path.isfile(self._filename):
+            try:
+                f = open(self._filename, 'r')
+                json_str = f.read()
+                self._cfg = jsonpickle.decode(json_str)
+                f.close()
+            except:
+                raise IOError
 
     def addCfg(self, pNbChannel, pDay, pSTime):
         '''
@@ -100,7 +116,7 @@ class Config(object):
         '''
         if pDay in ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'):
             if isinstance(pSTime, stime.STime):
-                self.cfg[pNbChannel].setCfg(pDay, pSTime)
+                self._cfg[pNbChannel].setCfg(pDay, pSTime)
             else:
                 raise ValueError
         else:
@@ -112,7 +128,7 @@ class Config(object):
         @param pNbChannel: channel number
         @return: ChannelConfig object
         '''
-        return self.cfg[pNbChannel]
+        return self._cfg[pNbChannel]
 
 
 class ConfigEncoder(json.JSONEncoder):
