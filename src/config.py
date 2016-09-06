@@ -15,6 +15,27 @@ import jsonpickle
 DAYLIST = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
 
 
+class ConfigError(Exception):
+    pass
+
+
+class FileNotExist(ConfigError):
+    def __init__(self, pFilename,):
+        self.filename = pFilename
+
+
+class LoadError(ConfigError):
+    def __init__(self, pFilename, pMsg):
+        self.filename = pFilename
+        self.message = pMsg
+
+
+class SaveError(ConfigError):
+    def __init__(self, pFilename, pMsg):
+        self.filename = pFilename
+        self.message = pMsg
+
+
 class ChannelConfig(object):
     '''
     Configuration of one channel
