@@ -12,6 +12,7 @@ import os
 import sys
 import unittest
 import datetime
+import tempfile
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -100,16 +101,16 @@ class TestChannelConfig(unittest.TestCase):
 class TestConfig(unittest.TestCase):
 
     def setUp(self):
-        pass
+        fhandler, self.fname = tempfile.mkstemp(text=True)
 
     def tearDown(self):
-        pass
+        os.remove(self.fname)
 
     def test_addCfg(self):
         '''
         Test add new configuration
         '''
-        cfg = config.Config(4, "/dev/null")
+        cfg = config.Config(4, self.fname)
         t1 = stime.STime(1, 0, 30)
         cfg.addCfg(0, 'Mon', t1)
 
@@ -124,6 +125,29 @@ class TestConfig(unittest.TestCase):
 
         self.assertRaises(ValueError, cfg.addCfg, 0, 'ERR', t1)
         self.assertRaises(ValueError, cfg.addCfg, 0, 'Mon', 1234)
+
+    def test_save(self):
+        '''
+        Test save configuration into json
+        '''
+        cfg = config.Config(4, self.fname)
+        t1 = stime.STime(1, 0, 30)
+        t2 = stime.STime(20, 0, 30)
+        cfg.addCfg(0, 'Mon', t1)
+        cfg.addCfg(0, 'Mon', t2)
+        cfg.addCfg(0, 'Tue', t1)
+        cfg.addCfg(0, 'Fri', t2)
+
+        cfg.save()
+
+        cfg2 = config.Config(4, self.fname)
+        cfg2.load()
+
+        ch0 = cfg2.getCfg(0)
+
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(ch0)
 
 
 def suite():
