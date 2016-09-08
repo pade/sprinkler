@@ -49,7 +49,7 @@ class ChannelConfig(object):
         self.number = pChannel
         self.day = {'Mon': [], 'Tue': [], 'Wed': [],
                     'Thu': [], 'Fri': [], 'Sat': [], 'Sun': []}
-        self.activate = False
+        self._activate = False
 
     def getCfg(self, pDay):
         '''
@@ -66,6 +66,22 @@ class ChannelConfig(object):
         @param pSTime: STime object
         '''
         self.day[pDay].append(pSTime)
+
+    def active(self, pActive):
+        '''
+        Activate/deactivate the channel
+        @param pActive: True to _activate, False to deactivate
+        '''
+        if pActive:
+            self._activate = True
+        else:
+            self._activate = False
+
+    def isactive(self):
+        '''
+        Return the state of the channel
+        '''
+        return self._activate
 
     def findCfg(self, pDay, pDateTime):
         '''
@@ -104,6 +120,9 @@ class Config(object):
         '''
         self._filename = pFileName
         self._cfg = []
+        jsonpickle.set_preferred_backend('json')
+        jsonpickle.set_encoder_options('json', sort_keys=True, indent=4)
+
         for i in range(pNbOfChannel):
             self._cfg.append(ChannelConfig(i))
 
@@ -155,6 +174,23 @@ class Config(object):
         @return: ChannelConfig object
         '''
         return self._cfg[pNbChannel]
+
+    def active(self, pNbChannel, pActive):
+        '''
+        Activate/deactivate the channel
+        @param pNbChannel: Channel number
+        @param pActive: True to _activate, False to deactivate
+        '''
+        if pActive:
+            self._cfg[pNbChannel].active(True)
+        else:
+            self._cfg[pNbChannel].active(False)
+
+    def isactive(self, pNbChannel):
+        '''
+        Return the state of the channel
+        '''
+        return self._cfg[pNbChannel].isactive()
 
 
 class ConfigEncoder(json.JSONEncoder):

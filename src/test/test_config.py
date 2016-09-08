@@ -102,9 +102,11 @@ class TestConfig(unittest.TestCase):
 
     def setUp(self):
         fhandler, self.fname = tempfile.mkstemp(text=True)
+        print ("Config file: %s" % self.fname)
 
     def tearDown(self):
-        os.remove(self.fname)
+        #os.remove(self.fname)
+        pass
 
     def test_addCfg(self):
         '''
@@ -132,11 +134,12 @@ class TestConfig(unittest.TestCase):
         '''
         cfg = config.Config(4, self.fname)
         t1 = stime.STime(1, 0, 30)
-        t2 = stime.STime(20, 0, 30)
+        t2 = stime.STime(20, 10, 120)
         cfg.addCfg(0, 'Mon', t1)
         cfg.addCfg(0, 'Mon', t2)
         cfg.addCfg(0, 'Tue', t1)
         cfg.addCfg(0, 'Fri', t2)
+        cfg.active(0, True)
 
         cfg.save()
 
@@ -144,10 +147,24 @@ class TestConfig(unittest.TestCase):
         cfg2.load()
 
         ch0 = cfg2.getCfg(0)
+        monday = ch0.getCfg('Mon')
+        self.assertTrue(len(monday) == 2)
+        if monday[0].hour == 1:
+            self.assertTrue(monday[0].hour == 1 and monday[0].minute == 0 and
+                             monday[0].duration == 30)
+            self.assertTrue(monday[1].hour == 20 and monday[1].minute == 10 and
+                             monday[1].duration == 120)
+        else:
+            self.assertTrue(monday[1].hour == 1 and monday[1].minute == 0 and
+                             monday[1].duration == 30)
+            self.assertTrue(monday[0].hour == 20 and monday[0].minute == 10 and
+                             monday[0].duration == 120)
+        tuesday = ch0.getCfg('Tue')
+        self.assertTrue(tuesday[0].hour == 1 and tuesday[0].minute == 0 and
+                         tuesday[0].duration == 30)
 
-        import pprint
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(ch0)
+        self.assertTrue(cfg2.isactive(0))
+        self.assertFalse(cfg2.isactive(1))
 
 
 def suite():
