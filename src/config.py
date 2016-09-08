@@ -134,9 +134,10 @@ class Config(object):
             f = open(self._filename, 'w')
             json_obj = jsonpickle.encode(self._cfg)
             f.write(json_obj)
-            f.close()
         except:
             raise IOError
+        finally:
+            f.close()
 
     def load(self):
         '''
@@ -147,9 +148,12 @@ class Config(object):
                 f = open(self._filename, 'r')
                 json_str = f.read()
                 self._cfg = jsonpickle.decode(json_str)
-                f.close()
             except:
                 raise IOError
+            finally:
+                f.close()
+        else:
+            raise FileNotExist(self._filename)
 
     def addCfg(self, pNbChannel, pDay, pSTime):
         '''
