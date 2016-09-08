@@ -139,7 +139,7 @@ class TestConfig(unittest.TestCase):
         cfg.addCfg(0, 'Mon', t2)
         cfg.addCfg(0, 'Tue', t1)
         cfg.addCfg(0, 'Fri', t2)
-        cfg.active(0, True)
+        cfg.enable(0, True)
 
         cfg.save()
 
@@ -163,8 +163,8 @@ class TestConfig(unittest.TestCase):
         self.assertTrue(tuesday[0].hour == 1 and tuesday[0].minute == 0 and
                          tuesday[0].duration == 30)
 
-        self.assertTrue(cfg2.isactive(0))
-        self.assertFalse(cfg2.isactive(1))
+        self.assertTrue(cfg2.isenable(0))
+        self.assertFalse(cfg2.isenable(1))
 
 
 def suite():

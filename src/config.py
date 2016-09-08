@@ -67,7 +67,7 @@ class ChannelConfig(object):
         '''
         self.day[pDay].append(pSTime)
 
-    def active(self, pActive):
+    def enable(self, pActive):
         '''
         Activate/deactivate the channel
         @param pActive: True to _activate, False to deactivate
@@ -77,7 +77,7 @@ class ChannelConfig(object):
         else:
             self._activate = False
 
-    def isactive(self):
+    def isenable(self):
         '''
         Return the state of the channel
         '''
@@ -175,39 +175,19 @@ class Config(object):
         '''
         return self._cfg[pNbChannel]
 
-    def active(self, pNbChannel, pActive):
+    def enable(self, pNbChannel, pActive):
         '''
         Activate/deactivate the channel
         @param pNbChannel: Channel number
         @param pActive: True to _activate, False to deactivate
         '''
         if pActive:
-            self._cfg[pNbChannel].active(True)
+            self._cfg[pNbChannel].enable(True)
         else:
-            self._cfg[pNbChannel].active(False)
+            self._cfg[pNbChannel].enable(False)
 
-    def isactive(self, pNbChannel):
+    def isenable(self, pNbChannel):
         '''
         Return the state of the channel
         '''
-        return self._cfg[pNbChannel].isactive()
-
-
-class ConfigEncoder(json.JSONEncoder):
-    '''
-    Encode configuration into JSON format
-    '''
-    def default(self, pObj):
-        if isinstance(pObj, Config):
-            # TODO: return JSON structure to fill
-            pass
-        return json.JSONEncoder.default(self.pObj)
-
-
-class ConfigDecoder(json.JSONDecoder):
-    '''
-    Decode configuration from JSON format
-    '''
-    def default(self, pStr):
-        # TODO: return a 'Config' instance with attribute read from JSON string pStr
-        pass
+        return self._cfg[pNbChannel].isenable()

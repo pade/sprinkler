@@ -23,7 +23,7 @@ class Channel():
 
         # On initialisation, stop water
         self.__state = False
-        self.ac_activatealse)
+        self.activate(False)
         self.__logger.debug("Initialisation channel %s" % self.__nb)
 
     def get_nb(self):
@@ -32,7 +32,7 @@ class Channel():
     def get_state(self):
         return self.__state
 
-    def ac_activateelf, pState):
+    def activate(self, pState):
         '''
         @param pState: boolean, if pState is True, then ac_activatehe channel,
         otherwise channel is deactivated
