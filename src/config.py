@@ -26,15 +26,17 @@ class FileNotExist(ConfigError):
 
 
 class LoadError(ConfigError):
-    def __init__(self, pFilename, pMsg):
+    def __init__(self, pFilename, pTrace):
         self.filename = pFilename
-        self.message = pMsg
+        self.type = pTrace[0]
+        self.value = pTrace[1]
 
 
 class SaveError(ConfigError):
-    def __init__(self, pFilename, pMsg):
+    def __init__(self, pFilename, pTrace):
         self.filename = pFilename
-        self.message = pMsg
+        self.type = pTrace[0]
+        self.value = pTrace[1]
 
 
 class ChannelConfig(object):
