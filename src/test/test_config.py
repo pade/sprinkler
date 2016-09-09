@@ -9,6 +9,7 @@ Created on 2 sept. 2016
 #@PydevCodeAnalysisIgnore
 
 import os
+import stat
 import sys
 import unittest
 import datetime
@@ -128,9 +129,9 @@ class TestConfig(unittest.TestCase):
         self.assertRaises(ValueError, cfg.addCfg, 0, 'ERR', t1)
         self.assertRaises(ValueError, cfg.addCfg, 0, 'Mon', 1234)
 
-    def test_save(self):
+    def test_save_and_load(self):
         '''
-        Test save configuration into json
+        Test save and load configuration into json
         '''
         cfg = config.Config(4, self.fname)
         t1 = stime.STime(1, 0, 30)
@@ -165,6 +166,25 @@ class TestConfig(unittest.TestCase):
 
         self.assertTrue(cfg2.isenable(0))
         self.assertFalse(cfg2.isenable(1))
+
+    def test_save_load_error(self):
+        '''
+        Test error management of save and load method
+        '''
+        cfg = config.Config(4, "not_existing_file.db")
+        self.assertRaises(config.FileNotExist, cfg.load)
+
+        # try to read a read-only file
+        fhandler, fname = tempfile.mkstemp(text=True)
+        cfg = config.Config(4, fname)
+        os.chmod(fname, ~stat.S_IWRITE)
+        self.assertRaises(config.SaveError, cfg.save)
+
+        # try to read a file not readable
+        fhandler, fname = tempfile.mkstemp(text=True)
+        cfg = config.Config(4, fname)
+        os.chmod(fname, ~stat.S_IREAD)
+        self.assertRaises(config.LoadError, cfg.load)
 
 
 def suite():

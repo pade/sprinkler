@@ -6,7 +6,7 @@ Created on 30 août 2016
 '''
 
 import os.path
-import json
+import sys
 import stime
 import datetime
 import jsonpickle
@@ -22,6 +22,7 @@ class ConfigError(Exception):
 class FileNotExist(ConfigError):
     def __init__(self, pFilename,):
         self.filename = pFilename
+        Exception.__init__(self, 'File %s not found.' % self.filename)
 
 
 class LoadError(ConfigError):
@@ -134,10 +135,10 @@ class Config(object):
             f = open(self._filename, 'w')
             json_obj = jsonpickle.encode(self._cfg)
             f.write(json_obj)
-        except:
-            raise IOError
-        finally:
             f.close()
+        except:
+            err = sys.exc_info()
+            raise SaveError(self._filename, err)
 
     def load(self):
         '''
@@ -148,10 +149,10 @@ class Config(object):
                 f = open(self._filename, 'r')
                 json_str = f.read()
                 self._cfg = jsonpickle.decode(json_str)
-            except:
-                raise IOError
-            finally:
                 f.close()
+            except:
+                err = sys.exc_info()
+                raise LoadError(self._filename, err)
         else:
             raise FileNotExist(self._filename)
 
