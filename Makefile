@@ -2,12 +2,12 @@
 
 test:
 	@echo "Running tests..."
-	PYTHONPATH=. nosetests -v
+	PYTHONPATH=. nosetests3 -v
 	@echo "Done."
 	
 cov:
 	@echo "Coverage..."
-	@nosetests -v --with-coverage --cover-erase --cover-html-dir=htmlcov --cover-branches --cover-html
+	@nosetests3 -v --with-coverage --cover-erase --cover-html-dir=htmlcov --cover-branches --cover-html
 	@echo "Done."
 
 pep8:

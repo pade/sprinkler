@@ -7,9 +7,30 @@ Created on 9 sept. 2016
 
 import logging
 import threading
+import multiprocessing
 
 
 class PeriodicProcess(object):
+    """
+    Python periodic task
+    """
+    def __init__(self, callback, period=1, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.period = period
+        self.callback = callback
+        self.stop = False
+        self.process = multiprocessing.Process(target=self.callback,
+                                               args=self.args, kwargs=self.kwargs)
+
+        def start():
+            '''
+            Start process
+            '''
+            self.process.start()
+
+
+class PeriodicProcess1(object):
     """
     Python periodic Thread using Timer with instant cancellation
     """
