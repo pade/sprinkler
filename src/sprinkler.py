@@ -10,12 +10,14 @@ import sys
 import os.path
 import argparse
 import logging
-from multiprocessing import process
+import configparser
 from config import Config, FileNotExist, LoadError, SaveError
 from config import DAYLIST
 from stime import STime
 
-DEFAULT_CFG_FILE = os.path.join(os.path.expanduser("~"), ".sprinkler")
+DEFAULT_CFG_DIR = os.path.join(os.path.expanduser("~"), ".sprinkler")
+DATABASE_FILE = os.path.join(DEFAULT_CFG_DIR, "program.db")
+CONFIG_FILE = os.path.join(DEFAULT_CFG_DIR, "config")
 CHANNEL_NB = 4
 
 
@@ -24,7 +26,7 @@ def update_config(pCfg):
     Update configuration
     @param pCfg: Config object to update
     '''
-    pass 
+    pass
 
 
 if __name__ == '__main__':
@@ -38,34 +40,42 @@ if __name__ == '__main__':
     logger.addHandler(handler)
 
     parser = argparse.ArgumentParser(description="Automatic sprinkler management")
-    parser.add_argument('-c', '--config', default=DEFAULT_CFG_FILE, dest="config",
-                        help="Name of the file to store configuration")
     parser.add_argument('-d', '--debug', help='activate debug messages on output',
                         action="store_true")
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    logger.info("Using configuration file %s" % args.config)
+    # Create configuration directory if it does not exists
+    if not os.path.isdir(DEFAULT_CFG_DIR):
+        os.mkdir(DEFAULT_CFG_DIR)
 
-    # Create configuration
-    cfg = Config(CHANNEL_NB, args.config)
+    # Create default configuration file if it does not exists
+    config = configparser.ConfigParser()
     try:
-        cfg.load()
+        config.read_file(open(CONFIG_FILE))
+    except:
+        # File does not exist: must create one
+        logger.info("Create default configuration file %s" % CONFIG_FILE)
+        config['meteo'] = {'url': 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
+        with open(CONFIG_FILE, 'w') as configfile:
+            config.write(configfile)
+
+    # Create program
+    prog = Config(CHANNEL_NB, DATABASE_FILE)
+    try:
+        prog.load()
     except FileNotExist:
         # New configuration
         for i in range(CHANNEL_NB):
             for day in DAYLIST:
                 t = STime()
-                cfg.addCfg(i, day, t)
+                prog.addCfg(i, day, t)
         try:
-            cfg.save()
+            prog.save()
         except SaveError as e:
-            logger.error("Impossible to save file %s, <%s>: %s" % (args.config, e.type, e.value))
+            logger.error("Impossible to save file %s, <%s>: %s" % (DATABASE_FILE, e.type, e.value))
             sys.exit(1)
     except LoadError as e:
-        logger.error("Impossible to load file %s, <%s>: %s" % (args.config, e.type, e.value))
+        logger.error("Impossible to load file %s, <%s>: %s" % (DATABASE_FILE, e.type, e.value))
         sys.exit(1)
-        
-        
-    
