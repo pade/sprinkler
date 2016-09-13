@@ -20,9 +20,3 @@ class Meteo(object):
         @param url: URL to get information
         '''
         self._url = url
-
-        self._proc = multiprocessing.process.BaseProcess()
-
-    def get_info(self):
-        s = urllib.request.urlopen(self._url).read()
-        return s

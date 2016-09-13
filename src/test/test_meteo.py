@@ -22,9 +22,7 @@ class TestMeteo(unittest.TestCase):
         pass
 
     def test_meteo(self):
-        m = meteo.Meteo()
-        s = m.get_info()
-        pass
+        m = meteo.Meteo(url="http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500")
 
 
 def suite():
