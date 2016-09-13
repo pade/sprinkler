@@ -9,6 +9,10 @@ install:
 # command to run tests
 script: 
   - make check
+  
+branches:
+  only:
+  - master
 
 notifications:
   email:
