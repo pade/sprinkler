@@ -1,5 +1,11 @@
 # Simple makefile for quality
 
+ifeq ($(OS),Windows_NT)
+	NOSE=nosetests
+else
+	NOSE=nosetests3
+endif
+
 test:
 	@echo "Running tests..."
 	PYTHONPATH=. nosetests3 -v
@@ -7,7 +13,7 @@ test:
 	
 cov:
 	@echo "Coverage..."
-	@nosetests3 -v --with-coverage --cover-erase --cover-html-dir=htmlcov --cover-branches --cover-html
+	@$(NOSE) -v --with-coverage --cover-erase --cover-html-dir=htmlcov --cover-branches --cover-html
 	@echo "Done."
 
 pep8:
