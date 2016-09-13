@@ -11,14 +11,25 @@ import os.path
 import argparse
 import logging
 import configparser
+import signal
+from threading import Event
+
 from config import Config, FileNotExist, LoadError, SaveError
 from config import DAYLIST
 from stime import STime
+from scheduler import Scheduler
 
 DEFAULT_CFG_DIR = os.path.join(os.path.expanduser("~"), ".sprinkler")
 DATABASE_FILE = os.path.join(DEFAULT_CFG_DIR, "program.db")
 CONFIG_FILE = os.path.join(DEFAULT_CFG_DIR, "config")
 CHANNEL_NB = 4
+
+
+# ceate an event to stop all thread at the end
+stop_event = Event()
+
+# Launch a schedule every minutes to check configuration change
+sched = Scheduler(stop_event)
 
 
 def update_config(pCfg):
@@ -29,8 +40,18 @@ def update_config(pCfg):
     pass
 
 
+def exit_safe():
+    '''
+    Safe exit: stop all thread before exiting
+    '''
+    stop_event.set()
+    while sched.is_alive():
+        pass
+    sys.exit()
+
 if __name__ == '__main__':
 
+    signal.signal(signal.SIGINT, exit_safe)
     # Logging configuration
     logger = logging.getLogger("sprinkler")
     logger.setLevel(logging.INFO)
@@ -79,3 +100,10 @@ if __name__ == '__main__':
     except LoadError as e:
         logger.error("Impossible to load file %s, <%s>: %s" % (DATABASE_FILE, e.type, e.value))
         sys.exit(1)
+
+    minutes_event = sched.get_event()
+
+    while True:
+        # core engine
+        minutes_event.wait()
+        minutes_event.clear()
