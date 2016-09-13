@@ -1,10 +1,6 @@
 # Simple makefile for quality
 
-ifeq ($(OS),Windows_NT)
-	NOSE=nosetests
-else
-	NOSE=nosetests3
-endif
+NOSE=nosetests
 
 test:
 	@echo "Running tests..."
