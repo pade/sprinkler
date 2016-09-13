@@ -55,7 +55,7 @@ if __name__ == '__main__':
     try:
         config.read_file(open(CONFIG_FILE))
     except:
-        # File does not exist: must create one
+        # File does not exist: must create one with default parameters
         logger.info("Create default configuration file %s" % CONFIG_FILE)
         config['meteo'] = {'url': 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
         with open(CONFIG_FILE, 'w') as configfile:
