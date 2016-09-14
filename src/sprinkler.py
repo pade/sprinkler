@@ -29,7 +29,7 @@ class MainApp(object):
     Main application
     '''
 
-    def exit_safe(self):
+    def exit_safe(self, signal_nb, stack):
         '''
         Safe exit: stop all thread before exiting
         '''
@@ -74,7 +74,9 @@ class MainApp(object):
         self.stop_event = Event()
         self.sched = Scheduler(self.stop_event)
 
-        signal.signal(signal.SIGINT | signal.CTRL_C_EVENT, self.exit_safe)
+        signal.signal(signal.SIGINT, self.exit_safe)
+        signal.signal(signal.SIGQUIT, self.exit_safe)
+        signal.signal(signal.SIGTERM, self.exit_safe)
 
         # Create default configuration file if it does not exists
         self.config = configparser.ConfigParser()
