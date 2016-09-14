@@ -24,6 +24,7 @@ class Scheduler(object):
         self._event = Event()
         self._stop_event = stop_event
         self._sched = Thread(target=self._run, args=(self._event, self._stop_event))
+        self._sched.start()
 
     def _run(self, event, stop_event):
         '''
@@ -31,10 +32,10 @@ class Scheduler(object):
         @param event: Event is set every number of seconds
         @param stop_event: Event object that must be set to stop thread
         '''
-        oldtime = datetime.datetime().now()
+        oldtime = datetime.datetime.now()
         while not stop_event.is_set():
-            newtime = datetime.datetime().now()
-            if(newtime.minutes != oldtime.minutes):
+            newtime = datetime.datetime.now()
+            if(newtime.minute != oldtime.minute):
                 event.set()
                 oldtime = newtime
             # sleep a little
