@@ -121,7 +121,7 @@ class MainApp(object):
         '''
         while True:
             self.sched.get_event().wait()
-            print ("[%s] - Event is set..." % datetime.datetime.now())
+            self.logger.debug("Event is set..." % datetime.datetime.now())
             self.sched.get_event().clear()
 
 
