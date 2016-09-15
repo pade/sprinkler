@@ -103,6 +103,8 @@ class TestConfig(unittest.TestCase):
 
     def setUp(self):
         fhandler, self.fname = tempfile.mkstemp(text=True)
+        # to avoid warning
+        fhandler = fhandler
         print ("Config file: %s" % self.fname)
 
     def tearDown(self):
@@ -176,6 +178,8 @@ class TestConfig(unittest.TestCase):
 
         # try to read a read-only file
         fhandler, fname = tempfile.mkstemp(text=True)
+        # to avoid warning
+        fhandler = fhandler
         cfg = config.Config(4, fname)
         os.chmod(fname, ~stat.S_IWRITE)
         self.assertRaises(config.SaveError, cfg.save)
