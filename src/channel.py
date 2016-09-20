@@ -19,7 +19,7 @@ class Channel():
         '''
         self.__nb = pChNumber
         self.__hw = pHwInterface
-        self.__logger = logging.getLogger(__name__)
+        self.__logger = logging.getLogger()
 
         # On initialisation, stop water
         self.__state = False
