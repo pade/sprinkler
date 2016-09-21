@@ -5,6 +5,7 @@ Created on 30 août 2016
 @author: dassierp
 '''
 from datetime import datetime
+from datetime import timedelta
 
 
 class STime(object):
@@ -68,7 +69,7 @@ class STime(object):
 
         self.hour, self.minute = hour, minute
 
-    def toDateTime(self, pDateTime):
+    def startDate(self, pDateTime):
         '''
         Convert STime to datetime object
         with day, month and year of pDateTime object
@@ -76,6 +77,14 @@ class STime(object):
         '''
         return datetime(pDateTime.year, pDateTime.month, pDateTime.day,
                         self.hour, self.minute)
+
+    def endDate(self, pDateTime):
+        '''
+        Convert STime to datetime object adding with duration
+        with day, month and year of pDateTime object
+        @param pDateTime: Original datetime object to take into account
+        '''
+        return self.startDate(pDateTime) + timedelta(minutes=self.duration)
 
     def setDuration(self, pDuration):
         '''

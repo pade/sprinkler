@@ -91,9 +91,9 @@ class TestSTime(unittest.TestCase):
 
         self.assertRaises(ValueError, t.setTime, "abc")
 
-    def test_toDateTime(self):
+    def test_startDate(self):
         '''
-        Test toDateTime method
+        Test startDate method
         '''
         now = datetime.today()
         t = stime.STime(5, 20)
@@ -101,12 +101,12 @@ class TestSTime(unittest.TestCase):
         self.assertTrue(dt.year == now.year and dt.month == now.month and
                         dt.day == now.day and dt.hour == t.hour and dt.minute == t.minute)
 
-        def test_setDuration(self):
-            '''
-            Test setDuration method
-            '''
-            t = stime.STime(hour=1, minute=2, duration=10)
-            self.assertTrue(t.duration == 10)
+    def test_setDuration(self):
+        '''
+        Test setDuration method
+        '''
+        t = stime.STime(hour=1, minute=2, duration=10)
+        self.assertTrue(t.duration == 10)
 
     def test_now(self):
         '''
