@@ -95,11 +95,33 @@ class TestSTime(unittest.TestCase):
         '''
         Test startDate method
         '''
-        now = datetime.today()
+        now = datetime(2016, 9, 1, 20, 30)
         t = stime.STime(5, 20)
-        dt = t.toDateTime(now)
+        dt = t.startDate(now)
         self.assertTrue(dt.year == now.year and dt.month == now.month and
                         dt.day == now.day and dt.hour == t.hour and dt.minute == t.minute)
+
+    def test_endDate(self):
+        '''
+        Test endDate method
+        '''
+        now = datetime(2016, 9, 1, 20, 30)
+        t = stime.STime(20, 30, 60)
+        dt = t.endDate(now)
+        self.assertTrue(dt.year == now.year and dt.month == now.month and
+                        dt.day == now.day and dt.hour == 21 and dt.minute == 30)
+
+        now = datetime(2016, 9, 1, 23, 30)
+        t = stime.STime(23, 30, 60)
+        dt = t.endDate(now)
+        self.assertTrue(dt.year == now.year and dt.month == now.month and
+                        dt.day == now.day + 1 and dt.hour == 0 and dt.minute == 30)
+
+        now = datetime(2016, 9, 1, 23, 30)
+        t = stime.STime(23, 0, 60)
+        dt = t.endDate(now)
+        self.assertTrue(dt.year == now.year and dt.month == now.month and
+                        dt.day == now.day + 1 and dt.hour == 0 and dt.minute == 0)
 
     def test_setDuration(self):
         '''

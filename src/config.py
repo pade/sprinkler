@@ -98,8 +98,8 @@ class ChannelConfig(object):
         for t in self.day[pDay]:
             # Check if day's of the week are corresponding
             if pDateTime.weekday() == DAYLIST[pDay]:
-                start = t.toDateTime(pDateTime)
-                end = start + datetime.timedelta(minutes=t.duration)
+                start = t.startDate(pDateTime)
+                end = t.endDate(pDateTime)
                 if start <= pDateTime and end > pDateTime:
                     ret_val.append(t)
 
