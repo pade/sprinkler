@@ -13,7 +13,9 @@ import logging
 import configparser
 import signal
 import datetime
-from threading import Event
+from multiprocessing import Queue
+from multiprocessing import Pool
+from multiprocessing import Lock
 
 from config import Config, FileNotExist, LoadError, SaveError
 from config import DAYLIST
@@ -22,6 +24,8 @@ from scheduler import Scheduler
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), ".sprinkler")
 CHANNEL_NB = 4
+
+DAYNAME = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
 
 
 class MainApp(object):
@@ -34,9 +38,9 @@ class MainApp(object):
         Safe exit: stop all thread before exiting
         '''
         self.logger.info("Terminated by user (SIGINT)")
-        self.stop_event.set()
-        while self.sched.is_alive():
-            pass
+        #self.stop_event.set()
+        #while self.sched.is_alive():
+        #    pass
         sys.exit()
 
     def __init__(self, confdir):
@@ -71,11 +75,11 @@ class MainApp(object):
         if args.debug:
             self.logger.setLevel(logging.DEBUG)
 
-        self.stop_event = Event()
-        self.sched = Scheduler(self.stop_event)
+        #self.stop_event = Event()
+        #self.sched = Scheduler(self.stop_event)
 
         signal.signal(signal.SIGINT, self.exit_safe)
-        signal.signal(signal.SIGQUIT, self.exit_safe)
+        #signal.signal(signal.SIGQUIT, self.exit_safe)
         signal.signal(signal.SIGTERM, self.exit_safe)
 
         # Create default configuration file if it does not exists
@@ -108,6 +112,9 @@ class MainApp(object):
             self.logger.error("Impossible to load file %s, <%s>: %s" % (self._databse, e.type, e.value))
             sys.exit(1)
 
+        # Create a lock to prevent concurrent access to program
+        self._prog_lock = Lock()
+
     def update_config(self):
         '''
         Update configuration
@@ -115,14 +122,36 @@ class MainApp(object):
         '''
         pass
 
+    def _run(self, channel):
+        '''
+        Algorithm to manage a channel
+        @param channel: Channel number to manage
+        '''
+        # Get configuration
+        with self._prog_lock:
+            channel_prog = self.prog.getCfg(channel)
+        now = datetime.datetime.now()
+        matching_progs = channel_prog.findCfg(DAYNAME[now.weekday()], now)
+        if matching_progs is not None:
+            # Normally only one matching program is possible, so keep only first one
+            startdate = matching_progs[0].startDate(now)
+            enddate = matching_progs[0].endDate(now)
+
     def run(self):
         '''
         Run application
         '''
+        # Launch a Scheduler per channel
+        sched_prog = []
+        for i in range(CHANNEL_NB):
+            sched_prog.append(Scheduler(self._run, i))
+
+        # Create pool of process: one per channel
+        #processes = Pool(CHANNEL_NB)
+        #processes.map(self._run, range(CHANNEL_NB))
+
         while True:
-            self.sched.get_event().wait()
-            self.logger.debug("Event is set..." % datetime.datetime.now())
-            self.sched.get_event().clear()
+            pass
 
 
 if __name__ == '__main__':
