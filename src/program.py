@@ -15,31 +15,31 @@ import jsonpickle
 DAYLIST = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
 
 
-class ConfigError(Exception):
+class ProgramError(Exception):
     pass
 
 
-class FileNotExist(ConfigError):
+class FileNotExist(ProgramError):
     def __init__(self, pFilename,):
         self.filename = pFilename
         Exception.__init__(self, 'File %s not found.' % self.filename)
 
 
-class LoadError(ConfigError):
+class LoadError(ProgramError):
     def __init__(self, pFilename, pTrace):
         self.filename = pFilename
         self.type = pTrace[0]
         self.value = pTrace[1]
 
 
-class SaveError(ConfigError):
+class SaveError(ProgramError):
     def __init__(self, pFilename, pTrace):
         self.filename = pFilename
         self.type = pTrace[0]
         self.value = pTrace[1]
 
 
-class ChannelConfig(object):
+class ChannelProgram(object):
     '''
     Configuration of one channel
     '''
@@ -110,7 +110,7 @@ class ChannelConfig(object):
             return ret_val
 
 
-class Config(object):
+class Program(object):
     '''
     Configuration management class
     '''
@@ -127,7 +127,7 @@ class Config(object):
         jsonpickle.set_encoder_options('json', sort_keys=True, indent=4)
 
         for i in range(pNbOfChannel):
-            self._cfg.append(ChannelConfig(i))
+            self._cfg.append(ChannelProgram(i))
 
     def save(self):
         '''
@@ -178,7 +178,7 @@ class Config(object):
         '''
         Get configuration from channel number
         @param pNbChannel: channel number
-        @return: ChannelConfig object
+        @return: ChannelProgram object
         '''
         return self._cfg[pNbChannel]
 

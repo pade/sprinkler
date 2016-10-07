@@ -17,10 +17,11 @@ from multiprocessing import Queue
 from multiprocessing import Pool
 from multiprocessing import Lock
 
-from config import Config, FileNotExist, LoadError, SaveError
-from config import DAYLIST
+from program import Program, FileNotExist, LoadError, SaveError
+from program import DAYLIST
 from stime import STime
 from scheduler import Scheduler
+from checkprogram import CheckProgram, ServerData
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), ".sprinkler")
 CHANNEL_NB = 4
@@ -94,7 +95,7 @@ class MainApp(object):
                 self.config.write(configfile)
 
         # Create program
-        self.prog = Config(CHANNEL_NB, self._databse)
+        self.prog = Program(CHANNEL_NB, self._databse)
         try:
             self.prog.load()
         except FileNotExist:
@@ -118,7 +119,7 @@ class MainApp(object):
     def update_config(self):
         '''
         Update configuration
-        @param pCfg: Config object to update
+        @param pCfg: Program object to update
         '''
         pass
 
@@ -142,17 +143,23 @@ class MainApp(object):
         Run application
         '''
         # Launch a Scheduler per channel
-        sched_prog = []
-        for i in range(CHANNEL_NB):
-            sched_prog.append(Scheduler(self._run, i))
+#         sched_prog = []
+#         for i in range(CHANNEL_NB):
+#             sched_prog.append(Scheduler(self._run, i))
 
         # Create pool of process: one per channel
         #processes = Pool(CHANNEL_NB)
         #processes.map(self._run, range(CHANNEL_NB))
 
-        while True:
-            pass
+        server = CheckProgram()
 
+        while True:
+            if server.is_new_prog():
+                newprogs = server.get_newprog()
+                with self._prog.lock:
+                    for newprog in newprogs:
+                        
+                    
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY)
