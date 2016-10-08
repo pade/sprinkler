@@ -39,6 +39,49 @@ class SaveError(ProgramError):
         self.value = pTrace[1]
 
 
+class ProgramId(object):
+    '''
+    To store a program
+    '''
+    DAYNAME = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+
+    def __init__(self, day, progid, progtime):
+        '''
+        Constructor
+        '''
+        self.day = day
+        self.progid = progid
+        self.progtime = progtime
+
+    def get_day(self):
+        return self.__day
+
+    def get_progid(self):
+        return self.__progid
+
+    def get_progtime(self):
+        return self.__progtime
+
+    def set_day(self, value):
+        if value in self.DAYNAME:
+            self.__day = value
+        else:
+            raise ValueError
+
+    def set_progid(self, value):
+        self.__progid = value
+
+    def set_progtime(self, value):
+        if isinstance(value, stime.STime):
+            self.__progtime = value
+        else:
+            raise ValueError
+
+    day = property(get_day, set_day, None, None)
+    progid = property(get_progid, set_progid, None, None)
+    progtime = property(get_progtime, set_progtime, None, None)
+
+
 class ChannelProgram(object):
     '''
     Configuration of one channel
@@ -50,32 +93,37 @@ class ChannelProgram(object):
         @param pChannel: Channel number
         '''
         self.number = pChannel
-        self.day = {'Mon': [], 'Tue': [], 'Wed': [],
-                    'Thu': [], 'Fri': [], 'Sat': [], 'Sun': []}
+        self.prog = []
         self._activate = False
 
-    def getCfg(self, pDay):
+    def getCfg(self, day):
         '''
         Get configuration from given day
-        @param pDay: given day
+        @param day: given day
         @return: list of STime object
         '''
-        return self.day[pDay]
+        retval = []
+        for p in self.prog:
+            if p.day == day:
+                retval.append(p)
+        return retval
 
-    def setCfg(self, pDay, pSTime):
+    def setCfg(self, day, progid, pSTime):
         '''
         Set configuration for given day
-        @param pDay: given day
+        @param day: given day
+        @param progid: config id to set
         @param pSTime: STime object
         '''
-        self.day[pDay].append(pSTime)
+        p = ProgramId(day=day, progid=progid, progstime=pSTime)
+        self.prog.append(p)
 
-    def enable(self, pActive):
+    def enable(self, active):
         '''
         Activate/deactivate the channel
-        @param pActive: True to _activate, False to deactivate
+        @param active: True to _activate, False to deactivate
         '''
-        if pActive:
+        if active:
             self._activate = True
         else:
             self._activate = False
@@ -86,28 +134,28 @@ class ChannelProgram(object):
         '''
         return self._activate
 
-    def findCfg(self, pDay, pDateTime):
+    def findCfg(self, day, pDateTime):
         '''
         Try to find a configuration for the given day that match the time
         Configuration is return when pDateTime is between STime and STime + duration
-        @param pDay: day to looking for
+        @paramd day: day to looking for
         @param pDataTime: datetime object
         @return: None or a list of STime object matching the search
         '''
-        ret_val = []
-        for t in self.day[pDay]:
+        retval = []
+        for p in self.getCfg(day):
             # Check if day's of the week are corresponding
-            if pDateTime.weekday() == DAYLIST[pDay]:
-                start = t.startDate(pDateTime)
-                end = t.endDate(pDateTime)
+            if pDateTime.weekday() == DAYLIST[day]:
+                start = p.progstime.startDate(pDateTime)
+                end = p.progstime.endDate(pDateTime)
                 if start <= pDateTime and end > pDateTime:
-                    ret_val.append(t)
+                    retval.append(p.progstime)
 
-        if len(ret_val) == 0:
+        if len(retval) == 0:
             # Nothing found
             return None
         else:
-            return ret_val
+            return retval
 
 
 class Program(object):
