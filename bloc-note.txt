@@ -1,0 +1,1 @@
+Server XMPP possible: http://jabber.itunix.eu/
