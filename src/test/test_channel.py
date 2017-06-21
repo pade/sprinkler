@@ -41,19 +41,29 @@ class TestChannel(unittest.TestCase):
         '''
         Test update of the channel status
         '''
-        ch = channel.Channel(0, self.hw)
+        ch = channel.Channel("Ch1",0, self.hw)
+        ch.isenable = True
         ch.activate(True)
-        self.assertTrue(ch.state is True)
+        self.assertTrue(ch.running is True)
 
         ch.activate(False)
-        self.assertTrue(ch.state is False)
+        self.assertTrue(ch.running is False)
 
     def testInit(self):
         '''
         On init, stop water
         '''
-        ch = channel.Channel(0, self.hw)
-        self.assertTrue(ch.state is False)
+        ch = channel.Channel("Ch1",0, self.hw)
+        self.assertTrue(ch.running is False)
+    
+    def testEnable(self):
+        '''
+        When disable channel never runs
+        '''
+        ch = channel.Channel("Citronnier",0, self.hw)
+        self.assertTrue(ch.name is "Citronnier")
+        ch.isenable = False
+        self.assertTrue(ch.running is False)
 
 
 def suite():

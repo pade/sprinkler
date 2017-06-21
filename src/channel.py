@@ -11,39 +11,67 @@ class Channel():
     '''
     Control a water channel
     '''
-    def __init__(self, pChNumber, pHwInterface):
+    def __init__(self, pName, pChNumber, pHwInterface):
         '''
         Constructor
+        @param pName: channel name
         @param pChNumber: channel number, from 0 to number of physical channel - 1
         @param pHwInterface: a class derived from BaseGpio
         '''
         self.__nb = pChNumber
         self.__hw = pHwInterface
         self.__logger = logging.getLogger()
+        self.__is_enable = False
+        self.__name = pName
 
         # On initialisation, stop water
-        self.__state = False
+        self.__running = False
         self.activate(False)
         self.__logger.debug("Initialisation channel %s" % self.__nb)
 
-    def get_nb(self):
+    def _get_nb(self):
         return self.__nb
 
-    def get_state(self):
-        return self.__state
+    def _get_running(self):
+        return self.__running
+    
+    def _set_enable(self, pEnable):
+        '''
+        @param pEnable: True to enable the channel (can be used)
+        '''
+        self.__is_enable = pEnable
+        
+        if pEnable:
+            self.__logger.info("Channel {} ({}) is enabled".format(self.__name, self.__nb))
+        else:
+            self.__logger.info("Channel {} ({}) is disabled".format(self.__name, self.__nb))
+            
+        
+    def _get_enable(self):
+        return self.__is_enable
+    
+    def _get_name(self):
+        return self.__name
+    
+    def _set_name(self, pName):
+        self.__name = pName
 
     def activate(self, pState):
         '''
-        @param pState: boolean, if pState is True, then ac_activatehe channel,
-        otherwise channel is deactivated
+        @param pState: boolean, if pState is True, then channel runs,
+        otherwise channel is not running
+        If channel is not enable, do nothing
         '''
-        if pState is True:
-            self.__state = True
-            self.__logger.debug("Channel %s ON" % self.__nb)
-        else:
-            self.__state = False
-            self.__logger.debug("Channel %s OFF" % self.__nb)
-        self.__hw.write(self.__nb, self.__state)
+        if self.isenable is True:
+            if pState is True:
+                self.__running = True
+                self.__logger.debug("Channel %s ON" % self.__nb)
+            else:
+                self.__running = False
+                self.__logger.debug("Channel %s OFF" % self.__nb)
+            self.__hw.write(self.__nb, self.__running)
 
-    nb = property(get_nb, None, None, None)
-    state = property(get_state, None, None, None)
+    nb = property(_get_nb, None, None, None)
+    running = property(_get_running, None, None, None)
+    isenable = property(_get_enable, _set_enable, None, None)
+    name = property(_get_name, _set_name, None, None)
