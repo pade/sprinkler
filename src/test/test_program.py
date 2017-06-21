@@ -17,11 +17,11 @@ import tempfile
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-import config
+import program
 import stime
 
 
-class TestChannelConfig(unittest.TestCase):
+class TestChannelProgram(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -33,7 +33,7 @@ class TestChannelConfig(unittest.TestCase):
         '''
         Test setCfg and getCfg
         '''
-        ch = config.ChannelConfig(0)
+        ch = program.ChannelProgram(0)
         t = stime.STime(2, 10, 120)
         ch.setCfg('Mon', t)
         ret = ch.getCfg('Mon')
@@ -64,7 +64,7 @@ class TestChannelConfig(unittest.TestCase):
         Test find a configuration
         '''
         t1 = stime.STime(1, 0, 120)
-        ch = config.ChannelConfig(0)
+        ch = program.ChannelProgram(0)
         ch.setCfg('Mon', t1)
         ch.setCfg('Fri', t1)
 
@@ -88,21 +88,23 @@ class TestChannelConfig(unittest.TestCase):
 
     def test_findCfg2(self):
         '''
-        Test find configuration around midnight
+        Test find program around midnight
         '''
         t1 = stime.STime(23, 30, 120)
         # Following date is a monday
         d1 = datetime.datetime(year=2016, month=9, day=5, hour=23, minute=45)
-        ch = config.ChannelConfig(0)
+        ch = program.ChannelProgram(0)
         ch.setCfg('Mon', t1)
         l = ch.findCfg('Mon', d1)
         self.assertIsNotNone(l)
 
 
-class TestConfig(unittest.TestCase):
+class TestProgram(unittest.TestCase):
 
     def setUp(self):
         fhandler, self.fname = tempfile.mkstemp(text=True)
+        # to avoid warning
+        fhandler = fhandler
         print ("Config file: %s" % self.fname)
 
     def tearDown(self):
@@ -113,7 +115,7 @@ class TestConfig(unittest.TestCase):
         '''
         Test add new configuration
         '''
-        cfg = config.Config(4, self.fname)
+        cfg = program.Program(4, self.fname)
         t1 = stime.STime(1, 0, 30)
         cfg.addCfg(0, 'Mon', t1)
 
@@ -133,7 +135,7 @@ class TestConfig(unittest.TestCase):
         '''
         Test save and load configuration into json
         '''
-        cfg = config.Config(4, self.fname)
+        cfg = program.Program(4, self.fname)
         t1 = stime.STime(1, 0, 30)
         t2 = stime.STime(20, 10, 120)
         cfg.addCfg(0, 'Mon', t1)
@@ -144,7 +146,7 @@ class TestConfig(unittest.TestCase):
 
         cfg.save()
 
-        cfg2 = config.Config(4, self.fname)
+        cfg2 = program.Program(4, self.fname)
         cfg2.load()
 
         ch0 = cfg2.getCfg(0)
@@ -171,26 +173,28 @@ class TestConfig(unittest.TestCase):
         '''
         Test error management of save and load method
         '''
-        cfg = config.Config(4, "not_existing_file.db")
-        self.assertRaises(config.FileNotExist, cfg.load)
+        cfg = program.Program(4, "not_existing_file.db")
+        self.assertRaises(program.FileNotExist, cfg.load)
 
         # try to read a read-only file
         fhandler, fname = tempfile.mkstemp(text=True)
-        cfg = config.Config(4, fname)
+        # to avoid warning
+        fhandler = fhandler
+        cfg = program.Program(4, fname)
         os.chmod(fname, ~stat.S_IWRITE)
-        self.assertRaises(config.SaveError, cfg.save)
+        self.assertRaises(program.SaveError, cfg.save)
 
         # try to read a file not readable
         fhandler, fname = tempfile.mkstemp(text=True)
-        cfg = config.Config(4, fname)
+        cfg = program.Program(4, fname)
         os.chmod(fname, ~stat.S_IREAD)
-        self.assertRaises(config.LoadError, cfg.load)
+        self.assertRaises(program.LoadError, cfg.load)
 
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestChannelConfig))
-    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestConfig))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestChannelProgram))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestProgram))
 
     return suite
 

@@ -91,22 +91,44 @@ class TestSTime(unittest.TestCase):
 
         self.assertRaises(ValueError, t.setTime, "abc")
 
-    def test_toDateTime(self):
+    def test_startDate(self):
         '''
-        Test toDateTime method
+        Test startDate method
         '''
-        now = datetime.today()
+        now = datetime(2016, 9, 1, 20, 30)
         t = stime.STime(5, 20)
-        dt = t.toDateTime(now)
+        dt = t.startDate(now)
         self.assertTrue(dt.year == now.year and dt.month == now.month and
                         dt.day == now.day and dt.hour == t.hour and dt.minute == t.minute)
 
-        def test_setDuration(self):
-            '''
-            Test setDuration method
-            '''
-            t = stime.STime(hour=1, minute=2, duration=10)
-            self.assertTrue(t.duration == 10)
+    def test_endDate(self):
+        '''
+        Test endDate method
+        '''
+        now = datetime(2016, 9, 1, 20, 30)
+        t = stime.STime(20, 30, 60)
+        dt = t.endDate(now)
+        self.assertTrue(dt.year == now.year and dt.month == now.month and
+                        dt.day == now.day and dt.hour == 21 and dt.minute == 30)
+
+        now = datetime(2016, 9, 1, 23, 30)
+        t = stime.STime(23, 30, 60)
+        dt = t.endDate(now)
+        self.assertTrue(dt.year == now.year and dt.month == now.month and
+                        dt.day == now.day + 1 and dt.hour == 0 and dt.minute == 30)
+
+        now = datetime(2016, 9, 1, 23, 30)
+        t = stime.STime(23, 0, 60)
+        dt = t.endDate(now)
+        self.assertTrue(dt.year == now.year and dt.month == now.month and
+                        dt.day == now.day + 1 and dt.hour == 0 and dt.minute == 0)
+
+    def test_setDuration(self):
+        '''
+        Test setDuration method
+        '''
+        t = stime.STime(hour=1, minute=2, duration=10)
+        self.assertTrue(t.duration == 10)
 
     def test_now(self):
         '''
