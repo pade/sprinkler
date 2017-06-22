@@ -4,7 +4,7 @@ Created on 29 août 2016
 
 @author: dassierp
 '''
-# Ignore PyDev pep8 analysis
+# Ignore PyDev pep8 analysisc
 #@PydevCodeAnalysisIgnore
 
 import os
@@ -84,12 +84,10 @@ class TestSTime(unittest.TestCase):
         Test set method
         '''
         t = stime.STime()
-        t.setTime("2:3")
+        t.setTime(hour=2, minute=3)
         self.assertTrue(t.hour == 2 and t.minute == 3)
-        t.setTime("05:02")
+        t.setTime(hour=5, minute=2)
         self.assertTrue(t.hour == 5 and t.minute == 2)
-
-        self.assertRaises(ValueError, t.setTime, "abc")
 
     def test_startDate(self):
         '''

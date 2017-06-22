@@ -43,10 +43,10 @@ class TestChannel(unittest.TestCase):
         '''
         ch = channel.Channel("Ch1",0, self.hw)
         ch.isenable = True
-        ch.activate(True)
+        ch.running = True
         self.assertTrue(ch.running is True)
 
-        ch.activate(False)
+        ch.running = False
         self.assertTrue(ch.running is False)
 
     def testInit(self):

@@ -56,16 +56,13 @@ class STime(object):
         hour = (self.hour + nbhour) % 24
         return STime(hour=hour, minute=minute)
 
-    def setTime(self, pStr):
+    def setTime(self, hour, minute):
         '''
         Set STime object with the string in argument
-        @param pStr: Time string, format: "HH:MM"
+        @param hour: hour to set
+        @param minute: minute to set
         Nota: duration is unchanged
         '''
-        try:
-            hour, minute = map(int, pStr.split(':'))
-        except:
-            raise ValueError
 
         self.hour, self.minute = hour, minute
 
@@ -86,11 +83,11 @@ class STime(object):
         '''
         return self.startDate(pDateTime) + timedelta(minutes=self.duration)
 
-    def setDuration(self, pDuration):
+    def setDuration(self, duration):
         '''
         Set duration (in minutes)
         '''
-        self.duration = pDuration
+        self.duration = duration
 
     @classmethod
     def now(cls):

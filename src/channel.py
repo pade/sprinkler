@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 '''
-Created on 29 ao�t 2016
+Created on 29 août 2016
 
 @author: dassierp
 '''
@@ -26,8 +26,7 @@ class Channel():
 
         # On initialisation, stop water
         self.__running = False
-        self.activate(False)
-        self.__logger.debug("Initialisation channel %s" % self.__nb)
+        self.__logger.debug("Initialisation channel {} ({})".format(self.__name, self.__nb))
 
     def _get_nb(self):
         return self.__nb
@@ -56,7 +55,7 @@ class Channel():
     def _set_name(self, pName):
         self.__name = pName
 
-    def activate(self, pState):
+    def _set_running(self, pState):
         '''
         @param pState: boolean, if pState is True, then channel runs,
         otherwise channel is not running
@@ -72,6 +71,6 @@ class Channel():
             self.__hw.write(self.__nb, self.__running)
 
     nb = property(_get_nb, None, None, None)
-    running = property(_get_running, None, None, None)
+    running = property(_get_running, _set_running, None, None)
     isenable = property(_get_enable, _set_enable, None, None)
     name = property(_get_name, _set_name, None, None)
