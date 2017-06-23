@@ -23,6 +23,7 @@ class TestChannel(unittest.TestCase):
 
     def setUp(self):
         class StubHw(gpio.BaseGpio):
+
             def __init__(self, pconfig):
                 pass
 
@@ -41,7 +42,7 @@ class TestChannel(unittest.TestCase):
         '''
         Test update of the channel status
         '''
-        ch = channel.Channel("Ch1",0, self.hw)
+        ch = channel.Channel("Ch1", 0, self.hw)
         ch.isenable = True
         ch.running = True
         self.assertTrue(ch.running is True)
@@ -53,14 +54,14 @@ class TestChannel(unittest.TestCase):
         '''
         On init, stop water
         '''
-        ch = channel.Channel("Ch1",0, self.hw)
+        ch = channel.Channel("Ch1", 0, self.hw)
         self.assertTrue(ch.running is False)
-    
+
     def testEnable(self):
         '''
         When disable channel never runs
         '''
-        ch = channel.Channel("Citronnier",0, self.hw)
+        ch = channel.Channel("Citronnier", 0, self.hw)
         self.assertTrue(ch.name is "Citronnier")
         ch.isenable = False
         self.assertTrue(ch.running is False)
@@ -71,12 +72,13 @@ def suite():
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestChannel))
     return suite
 
+
 if __name__ == "__main__":
     logger = logging.getLogger()
     #logger.level = logging.DEBUG
     #formatter = logging.Formatter('%(asctime)s - %(name)s [%(levelname)s] %(message)s')
     handler = logging.NullHandler()
-    #handler.setFormatter(formatter)
+    # handler.setFormatter(formatter)
     logger.addHandler(handler)
 
     suite = suite()

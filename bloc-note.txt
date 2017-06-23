@@ -1,1 +1,4 @@
 Server XMPP possible: http://jabber.itunix.eu/
+
+Pour stuber la date en TU dans engine.py), voir https://stackoverflow.com/questions/13073281/how-to-mock-pythons-datetime-now-in-a-class-method-for-unit-testing
+

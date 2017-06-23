@@ -17,7 +17,8 @@ class STime(object):
         '''
         Constructor
         @param hour: hour, from 0 to 23. Outside this range, set to range limit
-        @param minute: minute, from 0 to 59. Outside this range, set to range limit
+        @param minute: minute, from 0 to 59. Outside this range,
+        set to range limit
         @param duration: duration of sprinkler, in minutes
         '''
         if hour < 0:
