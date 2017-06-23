@@ -1,6 +1,6 @@
 # Simple makefile for quality
 
-NOSE=nose2
+NOSE=nosetests3
 
 test:
 	@echo "Running tests..."

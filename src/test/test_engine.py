@@ -38,6 +38,11 @@ class TestEngine(unittest.TestCase):
         self.ch1.progs = [progdays.Progdays(), progdays.Progdays()]
         self.ch2.progs = [progdays.Progdays(), progdays.Progdays()]
 
+        self.ch1.isenable = True
+        self.ch1.progs[0].stime = stime.STime(hour=5, minute=0, duration=30)
+        self.ch1.progs[0].isactive = True
+        self.ch1.progs[0].set_days([True, True, True, True, True, True, True])
+
     def tearDown(self):
         pass
 
@@ -59,14 +64,26 @@ class TestEngine(unittest.TestCase):
         """
         Activate channel when time is done
         """
-        #logger = logging.getLogger()
-        #logger.level = logging.DEBUG
-        #stream_handler = logging.StreamHandler(sys.stdout)
-        #logger.addHandler(stream_handler)
-        self.ch1.isenable = True
-        self.ch1.progs[0].stime = stime.STime(hour=5, minute=0, duration=30)
-        self.ch1.progs[0].isactive = True
-        self.ch1.progs[0].set_days([True, True, True, True, True, True, True])
+        # logger = logging.getLogger()
+        # logger.level = logging.DEBUG
+        # stream_handler = logging.StreamHandler(sys.stdout)
+        # logger.addHandler(stream_handler)
+
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e._sched.stop()
+
+        # Mock engine function to force date and time
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 5, 15))
+        e.run()
+        self.assertTrue(self.hw.cmd)
+
+    def test_3(self):
+        """
+        When prog is not active do nothing
+        """
+        self.ch1.progs[0].isactive = False
 
         e = engine.Engine([self.ch1])
         # Stop scheduler, not used here
@@ -77,9 +94,96 @@ class TestEngine(unittest.TestCase):
             return_value=datetime(2017, 6, 23, 5, 15))
 
         e.run()
+        self.assertFalse(self.hw.cmd)
 
+    def test_4(self):
+        """
+        Deactivate channel outside time range
+        """
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e._sched.stop()
+
+        # Mock engine function to force date and time
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 5, 31))
+
+        e.run()
+        self.assertFalse(self.hw.cmd)
+
+        # Mock engine function to force date and time
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 4, 59))
+
+        e.run()
+        self.assertFalse(self.hw.cmd)
+
+    def test_5(self):
+        """
+        Deactivate channel when current day is not selected
+        """
+        # Set Friday off
+        self.ch1.progs[0].set_one_day(4, False)
+
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e._sched.stop()
+
+        # Mock engine function to force date and time
+        # 23 june 2017 is Friday
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 5, 15))
+
+        e.run()
+        self.assertFalse(self.hw.cmd)
+
+    def test_6(self):
+        """
+        Where some day are off, other days must runs
+        """
+
+        self.ch1.progs[0].set_one_day(0, False)
+        self.ch1.progs[0].set_one_day(1, False)
+        self.ch1.progs[0].set_one_day(2, False)
+        self.ch1.progs[0].set_one_day(3, False)
+        self.ch1.progs[0].set_one_day(4, False)
+        self.ch1.progs[0].set_one_day(6, False)
+
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e._sched.stop()
+
+        # 24 june 2017 is Saturday
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 24, 5, 15))
+
+        e.run()
         self.assertTrue(self.hw.cmd)
 
+    def test_7(self):
+        """
+         Test when time is around midnight
+        """
+
+        self.ch1.progs[1].stime = stime.STime(hour=23, minute=50, duration=40)
+        self.ch1.progs[1].isactive = True
+        self.ch1.progs[1].set_days([True, True, True, True, True, True, True])
+
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e._sched.stop()
+
+        # Mock engine function to force date and time
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 23, 55))
+        e.run()
+        self.assertTrue(self.hw.cmd)
+        
+        # Mock engine function to force date and time
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 24, 0, 1))
+        e.run()
+        self.assertTrue(self.hw.cmd)
 
 def suite():
     suite = unittest.TestSuite()

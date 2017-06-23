@@ -19,9 +19,6 @@ class Engine(object):
         self._sched = Scheduler(self.run)
         self._logger = logging.getLogger()
 
-    def get_date_today(self):
-        return datetime.date.today()
-
     def get_datetime_now(self):
         return datetime.datetime.now()
         pass
@@ -35,7 +32,7 @@ class Engine(object):
             channel_status = []
             for prog in channel.progs:
                 if prog.isactive:
-                    day = self.get_date_today().weekday()
+                    day = self.get_datetime_now().weekday()
                     if prog.get_one_day(day):
                         # Programme is active for today
                         now = self.get_datetime_now()
