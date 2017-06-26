@@ -18,13 +18,13 @@ class NoStateRegister(StateMachineError):
 
 
 class StateMachine():
-    """dSimple state machine class"""
+    """Simple state machine class"""
 
     def __init__(self):
         self._list = {}
         self._current = None
 
-    def register(self, name, callback, args=[], kwargs={}):
+    def register(self, name, callback, args=[]):
         """ Register a new state
         @param name: state name (string)
         @param callback: function to call when state is active
@@ -32,15 +32,14 @@ class StateMachine():
         @param kwargs: argument to pass to the function
         """
 
-        self._list[name] = [callback, args, kwargs]
+        self._list[name] = [callback, args]
 
     def run(self):
         """ Run current state
         @param name: name of state to activate
         """
         if self._current is not None:
-            self._list[self._current][0](*self._list[self._current][1],
-                                         **self._list[self._current][2])
+            self._list[self._current][0](*self._list[self._current][1])
         else:
             raise NoStateRegister()
 

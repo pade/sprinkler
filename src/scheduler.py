@@ -8,6 +8,7 @@ Created on 13 sept. 2016
 from threading import Event
 from threading import Thread
 import datetime
+import logging
 
 
 class Scheduler(object):
@@ -24,6 +25,7 @@ class Scheduler(object):
         self._stop = Event()
         self._sched = Thread(target=self._run, args=(target, args, self._stop))
         self._sched.start()
+        self._logger = logging.getLogger()
 
     def _run(self, target, args, stop):
         '''
@@ -36,6 +38,7 @@ class Scheduler(object):
         while not stop.is_set():
             newtime = datetime.datetime.now()
             if(newtime.minute != oldtime.minute):
+                self._logger.debug("Scheduler fires now...")
                 if isinstance(args, tuple):
                     target(*args)
                 else:

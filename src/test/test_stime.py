@@ -26,9 +26,7 @@ class TestSTime(unittest.TestCase):
         pass
 
     def test_init(self):
-        '''
-        Test STime initialisation
-        '''
+        '''Test STime initialisation'''
         t = stime.STime(hour=5, minute=10)
         self.assertTrue(t.hour == 5 and t.minute == 10)
 
@@ -45,17 +43,13 @@ class TestSTime(unittest.TestCase):
         self.assertTrue(t.hour == 5 and t.minute == 0)
 
     def test_intoMinutes(self):
-        '''
-        Convert into minutes
-        '''
+        '''Convert into minutes'''
 
         t = stime.STime(hour=5, minute=20)
         self.assertTrue(t.intoMinutes() == 320)
 
     def test_str(self):
-        '''
-        Test print STime
-        '''
+        '''Test print STime'''
         str_stime = "%s" % stime.STime(hour=12, minute=10, duration=5)
         self.assertTrue(str_stime == "12:10 [5]")
 
@@ -63,9 +57,7 @@ class TestSTime(unittest.TestCase):
         self.assertTrue(str_stime == "01:02 [320]")
 
     def test_add(self):
-        '''
-        Test add function with STime class
-        '''
+        '''Test add function with STime class'''
         t1 = stime.STime(hour=2, minute=10)
 
         t = t1 + 130
@@ -77,12 +69,11 @@ class TestSTime(unittest.TestCase):
 
         t3 = stime.STime(hour=23, minute=45)
         t = t3 + 150
-        self.assertTrue(t.hour == 2 and t.minute == 15, "Expected 02:15, get %s" % t)
+        self.assertTrue(t.hour == 2 and t.minute == 15,
+                        "Expected 02:15, get %s" % t)
 
     def test_set(self):
-        '''
-        Test set method
-        '''
+        '''Test set method'''
         t = stime.STime()
         t.setTime(hour=2, minute=3)
         self.assertTrue(t.hour == 2 and t.minute == 3)
@@ -90,59 +81,45 @@ class TestSTime(unittest.TestCase):
         self.assertTrue(t.hour == 5 and t.minute == 2)
 
     def test_startDate(self):
-        '''
-        Test startDate method
-        '''
+        '''Test startDate method'''
         now = datetime(2016, 9, 1, 20, 30)
         t = stime.STime(5, 20)
         dt = t.startDate(now)
         self.assertTrue(dt.year == now.year and dt.month == now.month and
-                        dt.day == now.day and dt.hour == t.hour and dt.minute == t.minute)
+                        dt.day == now.day and
+                        dt.hour == t.hour and dt.minute == t.minute)
 
     def test_endDate(self):
-        '''
-        Test endDate method
-        '''
+        '''Test endDate method'''
         now = datetime(2016, 9, 1, 20, 30)
         t = stime.STime(20, 30, 60)
         dt = t.endDate(now)
         self.assertTrue(dt.year == now.year and dt.month == now.month and
-                        dt.day == now.day and dt.hour == 21 and dt.minute == 30)
+                        dt.day == now.day and
+                        dt.hour == 21 and dt.minute == 30)
 
         now = datetime(2016, 9, 1, 23, 30)
         t = stime.STime(23, 30, 60)
         dt = t.endDate(now)
         self.assertTrue(dt.year == now.year and dt.month == now.month and
-                        dt.day == now.day + 1 and dt.hour == 0 and dt.minute == 30)
+                        dt.day == now.day + 1 and
+                        dt.hour == 0 and dt.minute == 30)
 
         now = datetime(2016, 9, 1, 23, 30)
         t = stime.STime(23, 0, 60)
         dt = t.endDate(now)
         self.assertTrue(dt.year == now.year and dt.month == now.month and
-                        dt.day == now.day + 1 and dt.hour == 0 and dt.minute == 0)
+                        dt.day == now.day + 1 and
+                        dt.hour == 0 and dt.minute == 0)
 
     def test_setDuration(self):
-        '''
-        Test setDuration method
-        '''
+        '''Test setDuration method'''
         t = stime.STime(hour=1, minute=2, duration=10)
         self.assertTrue(t.duration == 10)
 
     def test_now(self):
-        '''
-        Text 'now()' class method
-        '''
+        '''Text 'now()' class method'''
         t = stime.STime.now()
         dt = datetime.now()
         self.assertTrue(t.hour == dt.hour and t.minute == dt.minute,
                         "Expected %02d:%02d, get %s" % (dt.hour, dt.minute, t))
-
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestSTime))
-    return suite
-
-if __name__ == "__main__":
-    suite = suite()
-    unittest.TextTestRunner(verbosity=2).run(suite)

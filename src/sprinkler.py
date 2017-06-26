@@ -39,8 +39,8 @@ class MainApp(object):
         Safe exit: stop all thread before exiting
         '''
         self.logger.info("Terminated by user (SIGINT)")
-        #self.stop_event.set()
-        #while self.sched.is_alive():
+        # self.stop_event.set()
+        # while self.sched.is_alive():
         #    pass
         sys.exit()
 
@@ -55,7 +55,7 @@ class MainApp(object):
             try:
                 os.mkdir(confdir)
             except:
-                print ("Impossible to create configuration directory %s" % confdir)
+                print("Impossible to create configuration directory %s" % confdir)
                 sys.exit(1)
 
         self._configfile = os.path.join(confdir, "sprinkler.conf")
@@ -64,12 +64,14 @@ class MainApp(object):
         # Logging configuration
         self.logger = logging.getLogger("sprinkler")
         self.logger.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(name)s [%(levelname)s] %(message)s')
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s [%(levelname)s] %(message)s')
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
-        parser = argparse.ArgumentParser(description="Automatic sprinkler management")
+        parser = argparse.ArgumentParser(
+            description="Automatic sprinkler management")
         parser.add_argument('-d', '--debug', help='activate debug messages on output',
                             action="store_true")
         args = parser.parse_args()
@@ -89,8 +91,10 @@ class MainApp(object):
             self.config.read_file(open(self._configfile))
         except:
             # File does not exist: must create one with default parameters
-            self.logger.info("Create default configuration file %s" % self._configfile)
-            self.config['meteo'] = {'url': 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
+            self.logger.info(
+                "Create default configuration file %s" % self._configfile)
+            self.config['meteo'] = {
+                'url': 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
             with open(self._configfile, 'w') as configfile:
                 self.config.write(configfile)
 
@@ -107,10 +111,12 @@ class MainApp(object):
             try:
                 self.prog.save()
             except SaveError as e:
-                self.logger.error("Impossible to save file %s, <%s>: %s" % (self._databse, e.type, e.value))
+                self.logger.error("Impossible to save file %s, <%s>: %s" % (
+                    self._databse, e.type, e.value))
                 sys.exit(1)
         except LoadError as e:
-            self.logger.error("Impossible to load file %s, <%s>: %s" % (self._databse, e.type, e.value))
+            self.logger.error("Impossible to load file %s, <%s>: %s" %
+                              (self._databse, e.type, e.value))
             sys.exit(1)
 
         # Create a lock to prevent concurrent access to program
@@ -134,7 +140,8 @@ class MainApp(object):
         now = datetime.datetime.now()
         matching_progs = channel_prog.findCfg(DAYNAME[now.weekday()], now)
         if matching_progs is not None:
-            # Normally only one matching program is possible, so keep only first one
+            # Normally only one matching program is possible, so keep only
+            # first one
             startdate = matching_progs[0].startDate(now)
             enddate = matching_progs[0].endDate(now)
 
@@ -158,8 +165,7 @@ class MainApp(object):
                 newprogs = server.get_newprog()
                 with self._prog.lock:
                     for newprog in newprogs:
-                        
-                    
+
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY)
