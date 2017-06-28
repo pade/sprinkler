@@ -1,5 +1,7 @@
-nose2>=0.6.5
 pep8>=1.6.2
 coverage>=4.2
-jsonpickle>=0.9.3
 requests>=2.11.1
+pytest>=3.1.2
+pytest-cov>=2.5.1
+jsonschema>=2.6.0
+

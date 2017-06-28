@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 import unittest
 from unittest.mock import MagicMock
+import pytest
 import sys
 import os
 
@@ -15,6 +16,7 @@ import stime
 from hw import gpio
 
 
+@pytest.mark.longtest
 class TestLongTime(unittest.TestCase):
 
     def setUp(self):

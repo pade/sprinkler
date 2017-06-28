@@ -91,7 +91,8 @@ class CheckProgram(object):
         @param prog: a Progam object to get and store the program
         '''
         self._stop = Event()
-        self._process = Process(target=self._run, args=(server, prog, self._stop))
+        self._process = Process(
+            target=self._run, args=(server, prog, self._stop))
         self.__logger = logging.getLogger()
         self._q = Queue()
 

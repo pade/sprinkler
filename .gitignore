@@ -146,3 +146,5 @@ local.properties
 
 # Code Recommenders
 .recommenders/
+
+sprinkler-env

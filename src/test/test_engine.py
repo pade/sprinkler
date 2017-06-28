@@ -3,7 +3,6 @@
 from datetime import datetime
 import unittest
 from unittest.mock import MagicMock
-import logging
 import sys
 import os
 

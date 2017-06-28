@@ -1,19 +1,19 @@
 # Simple makefile for quality
 
-NOSE=nose2
+PYTEST=pytest
 
 test:
 	@echo "Running tests..."
-	PYTHONPATH=. $(NOSE) -v -A '!long_test'
+	$(PYTEST) -m 'not longtest'
 	@echo "Done."
 	
 long_test:
 	@echo "Running long tests..."
-	PYTHONPATH=. $(NOSE) -v -A 'long_test'
+	$(PYTEST) -m 'longtest'
 	@echo "Done."
 cov:
 	@echo "Coverage..."
-	@$(NOSE) -v -A '!long_test' --with-coverage --cover-erase --cover-html-dir=htmlcov --cover-branches --cover-html
+	$(PYTEST) --cov-report html --cov 
 	@echo "Done."
 
 pep8:
