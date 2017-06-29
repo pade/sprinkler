@@ -4,16 +4,16 @@ PYTEST=pytest
 
 test:
 	@echo "Running tests..."
-	$(PYTEST) -m 'not longtest'
+	$(PYTEST) -m 'not longtest' --ignore=sprinkler-env
 	@echo "Done."
 	
 long_test:
 	@echo "Running long tests..."
-	$(PYTEST) -m 'longtest'
+	$(PYTEST) -m 'longtest' --ignore=sprinkler-env
 	@echo "Done."
 cov:
 	@echo "Coverage..."
-	$(PYTEST) --cov-report html --cov 
+	$(PYTEST) --cov-report html --cov  --ignore=sprinkler-env
 	@echo "Done."
 
 pep8:

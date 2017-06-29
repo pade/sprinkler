@@ -14,7 +14,7 @@ import jsonvalidate
 class TestJsonValidate(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self._curpath = os.path.dirname(os.path.abspath(__file__))
 
     def tearDown(self):
         pass
@@ -22,12 +22,12 @@ class TestJsonValidate(unittest.TestCase):
     def test_ok(self):
         """Test a well formed JSON file"""
         jsv = jsonvalidate.Validate()
-        jsv.validate_file("json_ok.js")
+        jsv.validate_file(os.path.join(self._curpath, "json_ok.js"))
         assert True
 
     def test_ko_1(self):
         """Test a well formed JSON file"""
         jsv = jsonvalidate.Validate()
         with pytest.raises(ValidationError) as excinfo:
-            jsv.validate_file("json_ko_1.js")
+            jsv.validate_file(os.path.join(self._curpath, "json_ko_1.js"))
         excinfo.match('24 is greater')
