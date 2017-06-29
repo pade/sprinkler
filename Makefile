@@ -18,7 +18,7 @@ cov:
 
 pep8:
 	@echo "Cheking PEP8 coding style..."
-	@pep8 . --exclude="docs,test*" --max-line-length=90 --ignore=E127,E265,E501
+	@pep8 . --exclude="sprinkler-env,docs,test*" --max-line-length=90 --ignore=E127,E265,E501
 	@echo "Done."
 
 

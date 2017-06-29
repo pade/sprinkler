@@ -232,9 +232,6 @@ class MainApp(object):
             f.write(DEFAULT_DATABASE)
             f.close()
 
-
-
-
     def update_config(self):
         '''
         Update configuration
