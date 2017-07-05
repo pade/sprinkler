@@ -175,7 +175,7 @@ class MainApp(object):
         if not os.path.isdir(confdir):
             try:
                 os.mkdir(confdir)
-            except:
+            except Exception:
                 print(
                     "Impossible to create configuration directory %s" % confdir
                 )
@@ -210,12 +210,13 @@ class MainApp(object):
         self.config = configparser.ConfigParser()
         try:
             self.config.read_file(open(self._configfile))
-        except:
+        except Exception:
             # File does not exist: must create one with default parameters
             self.logger.info(
                 "Create default configuration file %s" % self._configfile)
             self.config['meteo'] = {
-                'url': 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
+                'url':
+                'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
             self.config['xmpp'] = {
                 'server': 'https://...',
                 'login': '<put login here>',
@@ -227,7 +228,7 @@ class MainApp(object):
         # Create channel data base if not exists
         try:
             f = open(self._databse, 'w')
-        except:
+        except IOError:
             # Database does not exist, fill it with default value
             f.write(DEFAULT_DATABASE)
             f.close()

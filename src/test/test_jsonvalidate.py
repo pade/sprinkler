@@ -26,7 +26,7 @@ class TestJsonValidate(unittest.TestCase):
         assert True
 
     def test_ko_1(self):
-        """Test a well formed JSON file"""
+        """Test a malformed JSON file"""
         jsv = jsonvalidate.Validate()
         with pytest.raises(ValidationError) as excinfo:
             jsv.validate_file(os.path.join(self._curpath, "json_ko_1.js"))

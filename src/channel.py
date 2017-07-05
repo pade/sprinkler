@@ -25,6 +25,7 @@ class Channel():
         self.__hw = pHwInterface
         self.__logger = logging.getLogger()
         self.__is_enable = False
+        self.__manual = "AUTO"
         self.__name = pName
         self.__progdays = [Progdays(), Progdays()]
 
@@ -86,8 +87,23 @@ class Channel():
         '''
         self.__progdays = progs
 
+    def _set_manual(self, action):
+        """ Manual command, superseds program
+        @param action: must be: "OFF", "ON", or "AUTO"
+        """
+        if action is "ON":
+            self.__manual = "ON"
+        elif action is "OFF":
+            self.__manual = "OFF"
+        else:
+            self.__manual = "AUTO"
+
+    def _get_manual(self):
+        return self.__manual
+
     nb = property(_get_nb, None, None, None)
     running = property(_get_running, _set_running, None, None)
     isenable = property(_get_enable, _set_enable, None, None)
     name = property(_get_name, _set_name, None, None)
     progs = property(_get_prog, _set_prog, None, None)
+    manual = property(_get_manual, _set_manual, None, None)

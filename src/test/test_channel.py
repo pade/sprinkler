@@ -59,4 +59,13 @@ class TestChannel(unittest.TestCase):
         ch.isenable = False
         self.assertTrue(ch.running is False)
 
-
+    def testManual(self):
+        """Forced ON, OFF or return to AUTO"""
+        ch = channel.Channel("Citronnier", 0, self.hw)
+        self.assertTrue(ch.manual is "AUTO")
+        ch.manual = "OFF"
+        self.assertTrue(ch.manual is "OFF")
+        ch.manual = "ON"
+        self.assertTrue(ch.manual is "ON")
+        ch.manual = "DUMMY"
+        self.assertTrue(ch.manual is "AUTO")
