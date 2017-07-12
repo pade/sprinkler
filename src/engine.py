@@ -25,6 +25,10 @@ class Engine(object):
                 "NotRunning", self._not_running, [ch])
             self._statemachine[ch.nb].register(
                 "Running", self._running, [ch])
+            self._statemachine[ch.nb].register(
+                "ManualOn", self._manual_on, [ch])
+            self._statemachine[ch.nb].register(
+                "ManualOff", self._manual_off, [ch])
             self._statemachine[ch.nb].setState("NotRunning")
 
         self._sched = Scheduler(self.run)
@@ -34,18 +38,50 @@ class Engine(object):
         return datetime.datetime.now()
 
     def run(self):
+        self._logger.debug("Running engine...")
         for ch in self._channels:
             self._statemachine[ch.nb].run()
+
+    def _manual_on(self, channel):
+        """ Force running """
+        channel.running = True
+        if channel.manual == "OFF":
+            self._logger.info("Channel {} ({}) forced OFF"
+                              .format(channel.name, channel.nb))
+            self._statemachine[channel.nb].setState("ManualOff")
+            self._sched.schedule()
+        elif channel.manual == "AUTO":
+            self._logger.info("Channel {} ({}) set in program mode"
+                              .format(channel.name, channel.nb))
+            self._statemachine[channel.nb].setState("NotRunning")
+            self._sched.schedule()
+
+    def _manual_off(self, channel):
+        """ Force stop """
+        channel.running = False
+        if channel.manual == "ON":
+            self._logger.info("Channel '{}' ({}) forced ON"
+                              .format(channel.name, channel.nb))
+            self._statemachine[channel.nb].setState("ManualOn")
+            self._sched.schedule()
+        elif channel.manual == "AUTO":
+            self._logger.info("Channel '{}' ({}) set in program mode"
+                              .format(channel.name, channel.nb))
+            self._statemachine[channel.nb].setState("NotRunning")
+            self._sched.schedule()
 
     def _running(self, channel):
         """ Whenn channel is running """
         if channel.manual == "OFF":
-            self._logger.info("Channel {} ({}) forced OFF"
+            self._logger.info("Channel '{}' ({}) forced OFF"
                               .format(channel.name, channel.nb))
-            channel.running = False
-            self._statemachine[channel.nb].setState("NotRunning")
+            self._statemachine[channel.nb].setState("ManualOff")
+            self._sched.schedule()
         elif channel.manual == "ON":
-            self.running = True
+            self._logger.info("Channel '{}' ({}) forced ON"
+                              .format(channel.name, channel.nb))
+            self._statemachine[channel.nb].setState("ManualOn")
+            self._sched.schedule()
         else:
             channel_status = []
             if channel.isenable:
@@ -56,18 +92,20 @@ class Engine(object):
                             # Programme is active for today
                             now = self.get_datetime_now()
 
-                            self._logger.debug("{}: Start date: {}"
-                                               .format(channel.name,
-                                                       self.__savestartdate[
-                                                           channel.nb].isoformat()
-                                                       )
-                                               )
-                            self._logger.debug("{} End date: {}"
-                                               .format(channel.name,
-                                                       self.__saveenddate[
-                                                           channel.nb].isoformat()
-                                                       )
-                                               )
+                            self._logger.debug(
+                                "{}: Start date: {}"
+                                .format(channel.name,
+                                        self.__savestartdate[
+                                            channel.nb].isoformat()
+                                        )
+                            )
+                            self._logger.debug(
+                                "{} End date: {}"
+                                .format(channel.name,
+                                        self.__saveenddate[
+                                            channel.nb].isoformat()
+                                        )
+                            )
                             self._logger.debug("Now: {}"
                                                .format(now.isoformat()))
 
@@ -79,17 +117,21 @@ class Engine(object):
                 channel.running = True
             else:
                 self._statemachine[channel.nb].setState("NotRunning")
+                self._sched.schedule()
                 channel.running = False
 
     def _not_running(self, channel):
         """ When channel is not running """
-        if channel.manual == "ON":
+        if channel.manual == "OFF":
+            self._logger.info("Channel {} ({}) forced OFF"
+                              .format(channel.name, channel.nb))
+            self._statemachine[channel.nb].setState("ManualOff")
+            self._sched.schedule()
+        elif channel.manual == "ON":
             self._logger.info("Channel {} ({}) forced ON"
                               .format(channel.name, channel.nb))
-            channel.running = True
-            self._statemachine[channel.nb].setState("Running")
-        elif channel.manual == "OFF":
-            channel.running = False
+            self._statemachine[channel.nb].setState("ManualOn")
+            self._sched.schedule()
         else:
             channel_status = []
             if channel.isenable:
@@ -122,6 +164,7 @@ class Engine(object):
                 self.__savestartdate[channel.nb] = start
                 self.__saveenddate[channel.nb] = end
                 channel.running = True
+                self._sched.schedule()
             else:
                 channel.running = False
 

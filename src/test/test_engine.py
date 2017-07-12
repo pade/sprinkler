@@ -3,6 +3,7 @@
 from datetime import datetime
 import unittest
 from unittest.mock import MagicMock
+import logging
 import sys
 import os
 
@@ -42,6 +43,7 @@ class TestEngine(unittest.TestCase):
         self.ch1.progs[0].stime = stime.STime(hour=5, minute=0, duration=30)
         self.ch1.progs[0].isactive = True
         self.ch1.progs[0].set_days([True, True, True, True, True, True, True])
+        self._logger = logging.getLogger("Test engine")
 
     def tearDown(self):
         pass
@@ -219,6 +221,44 @@ class TestEngine(unittest.TestCase):
         e.run()
 
         self.assertTrue(not self.hw1.cmd and self.hw2.cmd)
+
+    def test_forcedOff(self):
+        """ Forced OFF when  running """
+
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e.stop()
+
+        # Force time into a running period
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 5, 15))
+        e.run()
+        self.assertTrue(self.hw1.cmd)
+        self.ch1.manual = "OFF"
+        e.run()
+        self.assertFalse(self.hw1.cmd)
+        self.ch1.manual = "AUTO"
+        e.run()
+        self.assertTrue(self.hw1.cmd)
+
+    def test_forcedOn(self):
+        """ Forced ON when not running """
+
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e.stop()
+
+        # Force time outside a running period
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 5, 45))
+        e.run()
+        self.assertFalse(self.hw1.cmd)
+        self.ch1.manual = "ON"
+        e.run()
+        self.assertTrue(self.hw1.cmd)
+        self.ch1.manual = "AUTO"
+        e.run()
+        self.assertFalse(self.hw1.cmd)
 
 
 # def suite():

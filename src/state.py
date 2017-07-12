@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+import logging
+
 
 class StateMachineError(Exception):
     pass
@@ -23,6 +25,7 @@ class StateMachine():
     def __init__(self):
         self._list = {}
         self._current = None
+        self._logger = logging.getLogger()
 
     def register(self, name, callback, args=[]):
         """ Register a new state
@@ -50,5 +53,6 @@ class StateMachine():
 
         if name in self._list:
             self._current = name
+            self._logger.debug("Entering state {}".format(self._current))
         else:
             raise UnknownState(name)
