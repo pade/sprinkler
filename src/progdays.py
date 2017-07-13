@@ -9,7 +9,7 @@ class Progdays():
 
     def __init__(self):
         self._isactive = False
-        self._stime = STime()
+        self.stime = STime()
         # table of days: first is monday, last is sunday
         self._days = [False, False, False, False, False, False, False]
         self._logger = logging.getLogger()
@@ -49,6 +49,6 @@ class Progdays():
         return self._days
 
     def get_stime(self):
-        return self._stime
+        return self.stime
 
     isactive = property(_get_isactivate, _set_isactive, None, None)

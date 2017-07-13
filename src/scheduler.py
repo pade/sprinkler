@@ -23,17 +23,9 @@ class Scheduler(object):
         @param args: tuple of arguments to pass to target
         '''
         self._stop = Event()
-        self._args = (target, args, self._stop)
-        self._sched = Thread(target=self._run, args=self._args)
+        self._sched = Thread(target=self._run, args=(target, args, self._stop))
         self._sched.start()
         self._logger = logging.getLogger()
-
-    def schedule(self):
-        """ Force reschduling """
-        if isinstance(self._args[1], tuple):
-            self._args[0](*self._args[1])
-        else:
-            self._args[0](self._args[1])
 
     def _run(self, target, args, stop):
         '''

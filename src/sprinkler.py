@@ -6,22 +6,16 @@ Created on 9 sept. 2016
 @author: dassierp
 '''
 
+
+from update_channels import UpdateChannels
 import sys
 import os.path
 import argparse
 import logging
 import configparser
 import signal
-import datetime
-from multiprocessing import Queue
-from multiprocessing import Pool
-from multiprocessing import Lock
 
-from program import Program, FileNotExist, LoadError, SaveError
-from program import DAYLIST
-from stime import STime
-from scheduler import Scheduler
-from checkprogram import CheckProgram, ServerData
+
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), ".sprinkler")
 CHANNEL_NB = 4
@@ -232,6 +226,15 @@ class MainApp(object):
             # Database does not exist, fill it with default value
             f.write(DEFAULT_DATABASE)
             f.close()
+
+        # Now database exists and must be readable
+        try:
+            db = open(self._databse, 'w')
+            upd = UpdateChannels(db)
+            ch_list = upd.channels()
+        except BaseException, Exception:
+            self.logger.info("FATAL ERROR", exc_info=True)
+            sys.exit(1)
 
     def update_config(self):
         '''
