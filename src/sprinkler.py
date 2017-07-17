@@ -182,7 +182,7 @@ class MainApp(object):
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s [%(levelname)s] %(message)s')
+            '%(asctime)s - %(filename)s [%(levelname)s] %(message)s')
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
