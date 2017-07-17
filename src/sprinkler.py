@@ -8,13 +8,13 @@ Created on 9 sept. 2016
 
 
 from update_channels import UpdateChannels
+from engine import Engine
 import sys
 import os.path
 import argparse
 import logging
 import configparser
 import signal
-
 
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), ".sprinkler")
@@ -53,8 +53,8 @@ DEFAULT_DATABASE = """
             ]
         },
         {
-            "nb": 0,
-            "name": "Channel 0",
+            "nb": 1,
+            "name": "Channel 1",
             "is_enable": false,
             "progdays": [
                 {
@@ -82,8 +82,8 @@ DEFAULT_DATABASE = """
             ]
         },
         {
-            "nb": 0,
-            "name": "Channel 0",
+            "nb": 2,
+            "name": "Channel 2",
             "is_enable": false,
             "progdays": [
                 {
@@ -111,8 +111,8 @@ DEFAULT_DATABASE = """
             ]
         },
         {
-            "nb": 0,
-            "name": "Channel 0",
+            "nb": 3,
+            "name": "Channel 3",
             "is_enable": false,
             "progdays": [
                 {
@@ -154,9 +154,8 @@ class MainApp(object):
         Safe exit: stop all thread before exiting
         '''
         self.logger.info("Terminated by user (SIGINT)")
-        # self.stop_event.set()
-        # while self.sched.is_alive():
-        #    pass
+        if self.engine is not None:
+            self.engine.stop()
         sys.exit()
 
     def __init__(self, confdir):
@@ -176,10 +175,11 @@ class MainApp(object):
                 sys.exit(1)
 
         self._configfile = os.path.join(confdir, "sprinkler.conf")
-        self._databse = os.path.join(confdir, "channel.db")
+        self._database = os.path.join(confdir, "channel.db")
+        self.engine = None
 
         # Logging configuration
-        self.logger = logging.getLogger("sprinkler")
+        self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s [%(levelname)s] %(message)s')
@@ -195,6 +195,7 @@ class MainApp(object):
         args = parser.parse_args()
         if args.debug:
             self.logger.setLevel(logging.DEBUG)
+            self.logger.debug("Debug mode activated")
 
         signal.signal(signal.SIGINT, self.exit_safe)
         # signal.signal(signal.SIGQUIT, self.exit_safe)
@@ -220,27 +221,33 @@ class MainApp(object):
                 self.config.write(configfile)
 
         # Create channel data base if not exists
-        try:
-            f = open(self._databse, 'w')
-        except IOError:
-            # Database does not exist, fill it with default value
-            f.write(DEFAULT_DATABASE)
-            f.close()
-
-        # Now database exists and must be readable
-        try:
-            db = open(self._databse, 'w')
-            upd = UpdateChannels(db)
-            ch_list = upd.channels()
-        except BaseException, Exception:
-            self.logger.info("FATAL ERROR", exc_info=True)
-            sys.exit(1)
+        if not os.path.isfile(self._database):
+            try:
+                with open(self._database, 'w') as f:
+                    f.write(DEFAULT_DATABASE)
+            except Exception:
+                self.logger.info("FATAL ERROR", exc_info=True)
+                sys.exit(1)
 
     def update_config(self):
         '''
         Update configuration
         '''
         pass
+
+    def run(self):
+        '''
+        Main program
+        '''
+        # Create channels from database
+        try:
+            db = open(self._database, 'r')
+            upd = UpdateChannels(db)
+            ch_list = upd.channels()
+            self.engine = Engine(ch_list)
+        except Exception:
+            self.logger.info("FATAL ERROR", exc_info=True)
+            sys.exit(1)
 
 
 if __name__ == '__main__':
