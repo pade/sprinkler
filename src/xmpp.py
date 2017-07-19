@@ -29,9 +29,8 @@ class XMPPData(ClientXMPP):
             self._logger.error("XMPP server too long to answer")
             self.disconnect()
 
-        self.send_message(mto="pade087@movim.eu", mbody="Bonjour !")
-        self.disconnect(wait=True)
+        self.send_message(mto="pade087@jabber.hot-chilli.net", mbody="Bonjour !")
 
     def message(self, msg):
-        self._logger.debug("Receiving message: {}".format(msg['body']))
+        print("Receiving message: {}".format(msg['body']))
 
