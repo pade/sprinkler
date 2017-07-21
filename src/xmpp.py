@@ -3,12 +3,12 @@
 
 import logging
 import sys
-import Queue
+from queue import Queue
 from sleekxmpp import ClientXMPP
 from sleekxmpp.exceptions import IqError, IqTimeout
 
 
-class XMPPData(ClientXMPP):
+class XMPPData(ClientXMPP, Queue):
     """Manage connexion with external device"""
 
     def __init__(self, login, password, server=()):
@@ -21,7 +21,7 @@ class XMPPData(ClientXMPP):
         self._logger = logging.getLogger()
         ClientXMPP.__init__(self, jid=login, password=password)
         self._server = server
-        self._q = Queue.Queue()
+        self.messages = Queue()
 
         self.register_plugin("xep_0030")  # Service Discovery
         self.register_plugin('xep_0004')  # Data Forms
@@ -31,11 +31,7 @@ class XMPPData(ClientXMPP):
         self.add_event_handler("session_start", self.session_start)
         self.add_event_handler("message", self.message)
 
-    def get_queue():
-        """ Return a Queue object where received messages are stores """
-        return self._q
-
-    def connect():
+    def connect(self):
         if self._server == ():
             self._logger.info(
                 "Connecting to XMPP server, using JID information")
@@ -64,7 +60,8 @@ class XMPPData(ClientXMPP):
             self.disconnect()
 
     def message(self, msg):
-        self._logger.debug(
-            "Receiving message from {}: {}".format(msg['from'], msg['body']))
-        self._q.put(msg)
+        if msg['type'] in ('normal', 'chat'):
+            self._logger.debug(
+                "Receiving message from {}: {}".format(msg['from'], msg['body']))
+            self.messages.put(msg)
 
