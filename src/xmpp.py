@@ -64,4 +64,3 @@ class XMPPData(ClientXMPP, Queue):
             self._logger.debug(
                 "Receiving message from {}: {}".format(msg['from'], msg['body']))
             self.messages.put(msg)
-
