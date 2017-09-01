@@ -32,20 +32,15 @@ class XMPPData(ClientXMPP, Queue):
         self.add_event_handler("message", self.message)
 
     def connect(self):
-        if self._server == ():
-            self._logger.info(
-                "Connecting to XMPP server, using JID information")
-            con = super().connect()
-        else:
-            self._logger.info("Connection to {}:{}".format(
-                self._server[0], self._server[1]))
-            con = super().connect(self._server)
+        self._logger.info("Connection to {}:{}".format(
+            self._server[0], self._server[1]))
+        con = super().connect(self._server)
 
         if not con:
             self._logger.error("Unable to connect")
         else:
             self._logger.info("Connexion established")
-            self.process()
+            self.process(block=True)
 
     def session_start(self, event):
         self.send_presence()
@@ -65,3 +60,8 @@ class XMPPData(ClientXMPP, Queue):
                 "Receiving message from {}: {}".format(msg['from'], msg['body']))
             self.messages.put(msg)
 
+    def close_connexion(self):
+        self.disconnect(wait=False)
+
+    def get_queue(self):
+        return self.messages

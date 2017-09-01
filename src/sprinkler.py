@@ -9,12 +9,15 @@ Created on 9 sept. 2016
 
 from update_channels import UpdateChannels
 from engine import Engine
+from xmpp import XMPPData
+from threading import Thread
 import sys
 import os.path
 import argparse
 import logging
 import configparser
 import signal
+import json
 
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), ".sprinkler")
@@ -154,9 +157,15 @@ class MainApp(object):
         Safe exit: stop all thread before exiting
         '''
         self.logger.info("Terminated by user (SIGINT)")
+        self.stop_all()
+        sys.exit()
+
+    def stop_all(self):
         if self.engine is not None:
             self.engine.stop()
-        sys.exit()
+        if self._xmpp_th is not None:
+            self.xmpp.close_connexion()
+            self._xmpp_th.join()
 
     def __init__(self, confdir):
         '''
@@ -177,6 +186,7 @@ class MainApp(object):
         self._configfile = os.path.join(confdir, "sprinkler.conf")
         self._database = os.path.join(confdir, "channel.db")
         self.engine = None
+        self._xmpp_th = None
 
         # Logging configuration
         self.logger = logging.getLogger()
@@ -214,6 +224,7 @@ class MainApp(object):
                 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
             self.config['xmpp'] = {
                 'server': 'https://...',
+                'port': '443',
                 'login': '<put login here>',
                 'password': '<put password here>'
             }
@@ -229,12 +240,6 @@ class MainApp(object):
                 self.logger.info("FATAL ERROR", exc_info=True)
                 sys.exit(1)
 
-    def update_config(self):
-        '''
-        Update configuration
-        '''
-        pass
-
     def run(self):
         '''
         Main program
@@ -245,9 +250,33 @@ class MainApp(object):
             upd = UpdateChannels(db)
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
+            self.xmpp = XMPPData(login=self.config['xmpp']['login'],
+                                 password=self.config['xmpp']['password'],
+                                 server=(self.config['xmpp']['server'],
+                                         self.config['xmpp']['port']))
+            self._xmpp_th = Thread(target=self.xmpp.connect)
+            self._xmpp_th.start()
+            self._msg_queue = self.xmpp.get_queue()
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
+            self.stop_all()
             sys.exit(1)
+
+        # Main loop
+        while(True):
+            msg = self._msg_queue.get()
+            try:
+                json_msg = json.loads(msg['body'])
+                command = json_msg['command']
+                self.logger.debug("Received command '{}'".format(command))
+
+                if command == 'get program':
+                    with open(self._database, "r") as fd:
+                        data = fd.read()
+                        msg.reply(data).send()
+            except:
+                self.logger.warning("Received unknown message: {}"
+                                    .format(msg['body']))
 
 
 if __name__ == '__main__':
