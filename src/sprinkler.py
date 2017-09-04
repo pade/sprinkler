@@ -163,12 +163,14 @@ class MainApp(object):
     def stop_all(self):
         if self.engine is not None:
             self.engine.stop()
-        self.xmpp.disconnect()
+        if self.xmpp is not None:
+            self.xmpp.disconnect()
 
-    def __init__(self, confdir):
+    def __init__(self, confdir, *argv):
         '''
         Constructor
         @param confdir: Configuration directory path
+        @param *argv: Command line argument
         '''
 
         # Create configuration directory if it does not exists
@@ -184,6 +186,7 @@ class MainApp(object):
         self._configfile = os.path.join(confdir, "sprinkler.conf")
         self._database = os.path.join(confdir, "channel.db")
         self.engine = None
+        self.xmpp = None
 
         # Logging configuration
         self.logger = logging.getLogger()
@@ -199,7 +202,7 @@ class MainApp(object):
         parser.add_argument('-d', '--debug',
                             help='activate debug messages on output',
                             action="store_true")
-        args = parser.parse_args()
+        args = parser.parse_args(*argv)
         if args.debug:
             self.logger.setLevel(logging.DEBUG)
             self.logger.debug("Debug mode activated")
@@ -274,5 +277,5 @@ class MainApp(object):
 
 
 if __name__ == '__main__':
-    app = MainApp(CONFIG_DIRECTORY)
+    app = MainApp(CONFIG_DIRECTORY, sys.argv[1:])
     app.run()
