@@ -5,6 +5,7 @@ import logging
 import sys
 from queue import Queue
 from sleekxmpp import ClientXMPP
+from threading import Thread
 from sleekxmpp.exceptions import IqError, IqTimeout
 
 
@@ -22,6 +23,8 @@ class XMPPData(ClientXMPP, Queue):
         ClientXMPP.__init__(self, jid=login, password=password)
         self._server = server
         self.messages = Queue()
+        self.th = Thread(target=self.process)
+
 
         self.register_plugin("xep_0030")  # Service Discovery
         self.register_plugin('xep_0004')  # Data Forms
@@ -30,6 +33,8 @@ class XMPPData(ClientXMPP, Queue):
 
         self.add_event_handler("session_start", self.session_start)
         self.add_event_handler("message", self.message)
+
+        self.connect()
 
     def connect(self):
         self._logger.info("Connection to {}:{}".format(
@@ -40,7 +45,7 @@ class XMPPData(ClientXMPP, Queue):
             self._logger.error("Unable to connect")
         else:
             self._logger.info("Connexion established")
-            self.process(block=True)
+            self.th.start()
 
     def session_start(self, event):
         self.send_presence()
@@ -60,8 +65,13 @@ class XMPPData(ClientXMPP, Queue):
                 "Receiving message from {}: {}".format(msg['from'], msg['body']))
             self.messages.put(msg)
 
-    def close_connexion(self):
-        self.disconnect(wait=False)
+    def disconnect(self):
+        super().disconnect(wait=False)
+        self.th.join()
 
-    def get_queue(self):
-        return self.messages
+    def get_message(self):
+        return self.messages.get()
+
+    def process(self):
+        super().process(block=True)
+

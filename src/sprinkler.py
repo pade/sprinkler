@@ -163,9 +163,7 @@ class MainApp(object):
     def stop_all(self):
         if self.engine is not None:
             self.engine.stop()
-        if self._xmpp_th is not None:
-            self.xmpp.close_connexion()
-            self._xmpp_th.join()
+        self.xmpp.disconnect()
 
     def __init__(self, confdir):
         '''
@@ -186,7 +184,6 @@ class MainApp(object):
         self._configfile = os.path.join(confdir, "sprinkler.conf")
         self._database = os.path.join(confdir, "channel.db")
         self.engine = None
-        self._xmpp_th = None
 
         # Logging configuration
         self.logger = logging.getLogger()
@@ -254,9 +251,6 @@ class MainApp(object):
                                  password=self.config['xmpp']['password'],
                                  server=(self.config['xmpp']['server'],
                                          self.config['xmpp']['port']))
-            self._xmpp_th = Thread(target=self.xmpp.connect)
-            self._xmpp_th.start()
-            self._msg_queue = self.xmpp.get_queue()
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
             self.stop_all()
@@ -264,7 +258,7 @@ class MainApp(object):
 
         # Main loop
         while(True):
-            msg = self._msg_queue.get()
+            msg = self.xmpp.get_message()
             try:
                 json_msg = json.loads(msg['body'])
                 command = json_msg['command']

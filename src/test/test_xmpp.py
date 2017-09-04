@@ -5,37 +5,13 @@ import logging
 import sys
 import os
 from threading import Thread
-from sleekxmpp import ClientXMPP
+
+from xmppbot import SendMsgBot
 
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import xmpp
-
-
-class SendMsgBot(ClientXMPP):
-
-    def __init__(self, recipient, msg, xmpp_info):
-        super(SendMsgBot, self).__init__(xmpp_info['login'],
-                                         xmpp_info['password'])
-
-        self.recipient = recipient
-        self.msg = msg
-        self._server = xmpp_info['server']
-
-        self.add_event_handler('session_start', self.start)
-
-        self.connect()
-        self.process(block=True)
-
-    def start(self, event):
-        self.send_presence()
-        self.get_roster()
-        self.send_message(mto=self.recipient, mbody=self.msg)
-        self.disconnect(wait=True)
-
-    def connect(self):
-        super(SendMsgBot, self).connect(self._server)
 
 
 class TestXMPP(unittest.TestCase):
@@ -44,7 +20,7 @@ class TestXMPP(unittest.TestCase):
     def setUp(self):
         self._logger = logging.getLogger()
 
-        self.client = {
+        self.code_to_test = {
             'server': ("server.jabber.hot-chilli.net", 80),
             'login': "sprinkler-tu@jabber.hot-chilli.net",
             'password': "!s20p21!"
@@ -61,19 +37,15 @@ class TestXMPP(unittest.TestCase):
 
     def test_1(self):
         """ Test XMPP connexion """
-        con = xmpp.XMPPData(login=self.client['login'],
-                            password=self.client['password'],
-                            server=self.client['server'])
+        xmpp_con = xmpp.XMPPData(login=self.code_to_test['login'],
+                            password=self.code_to_test['password'],
+                            server=self.code_to_test['server'])
 
-        q = con.get_queue()
+        msgbot = SendMsgBot(self.code_to_test['login'], self.tester)
+        msgbot.send_message("Hello my friend :)!")
 
-        xmpp_th = Thread(target=con.connect)
-        xmpp_th.start()
-
-        xmpp_tester = SendMsgBot(self.client['login'],
-                                 "Hello my friend :)!", self.tester)
-
-        msg = q.get()
-        con.close_connexion()
+        msg = xmpp_con.get_message() # wait until message is received
+        xmpp_con.disconnect()
+        msgbot.disconnect()
 
         self.assertTrue(msg['body'] == "Hello my friend :)!")
