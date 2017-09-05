@@ -260,14 +260,38 @@ class TestEngine(unittest.TestCase):
         e.run()
         self.assertFalse(self.hw1.cmd)
 
+    def test_forcedOn_2(self):
+        """ Forced ON when not running using Engine class """
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e.stop()
 
-# def suite():
-#     suite = unittest.TestSuite()
-#     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestEngine))
-#     return suite
+        # Force time outside a running period
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 5, 45))
+        e.run()
+        self.assertFalse(self.hw1.cmd)
 
+        e.channel_forced(0, "ON")
+        self.assertTrue(self.hw1.cmd)
 
-# if __name__ == "__main__":
+        e.channel_forced(0, "AUTO")
+        self.assertFalse(self.hw1.cmd)
 
-#     suite = suite()
-#     unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
+    def test_forcedOff_2(self):
+        """ Forced OFF when not running using Engine class """
+        e = engine.Engine([self.ch1])
+        # Stop scheduler, not used here
+        e.stop()
+
+        # Force time into a running period
+        e.get_datetime_now = MagicMock(
+            return_value=datetime(2017, 6, 23, 5, 15))
+        e.run()
+        self.assertTrue(self.hw1.cmd)
+
+        e.channel_forced(0, "OFF")
+        self.assertFalse(self.hw1.cmd)
+
+        e.channel_forced(0, "AUTO")
+        self.assertTrue(self.hw1.cmd)

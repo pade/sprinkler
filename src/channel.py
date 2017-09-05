@@ -91,9 +91,9 @@ class Channel():
         """ Manual command, superseds program
         @param action: must be: "OFF", "ON", or "AUTO"
         """
-        if action is "ON":
+        if action == "ON":
             self.__manual = "ON"
-        elif action is "OFF":
+        elif action == "OFF":
             self.__manual = "OFF"
         else:
             self.__manual = "AUTO"

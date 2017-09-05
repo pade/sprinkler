@@ -174,3 +174,16 @@ class Engine(object):
         self._sched.stop()
         while self._sched.is_alive():
             pass
+
+    def channel_forced(self, nb, action):
+        """ Set channel action
+        @param nb: channel number
+        @param action: channel action. "ON", "OFF", "AUTO"
+        """
+
+        for ch in self._channels:
+            if nb == ch.nb:
+                if action in ("ON", "OFF", "AUTO"):
+                    self._logger.debug("Channel {} forced to {}".format(nb, action))
+                    ch.manual = action
+                    self.run()

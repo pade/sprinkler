@@ -278,6 +278,12 @@ class MainApp(object):
                         with open(self._database, "r") as fd:
                             data = fd.read()
                             msg.reply(data).send()
+                    elif command == 'force channel':
+                        nb = int(json_msg['nb'])
+                        action = json_msg['action']
+                        self.logger.debug("Parameters: nb={}, action={}".format(nb, action))
+                        self.engine.channel_forced(nb, action)
+                        msg.reply('{"status": "OK"}').send()
                 except:
                     self.logger.warning("Received unknown message: {}"
                                         .format(msg['body']))

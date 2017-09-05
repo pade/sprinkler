@@ -66,7 +66,6 @@ class XMPPData(ClientXMPP, Queue):
 
     def disconnect(self):
         super().disconnect(wait=False)
-        self.th.join()
 
     def get_message(self):
         return self.messages.get()

@@ -176,6 +176,7 @@ class TestXMPP(unittest.TestCase):
         pass
 
     def test_1(self):
+        """ Test 'get program' command """
         app = MainApp(self.tmpdir.name, ['-d'])
         app_th = Thread(target=app.run)
         app_th.start()
@@ -190,3 +191,23 @@ class TestXMPP(unittest.TestCase):
 
         self.assertTrue(msg['body'] == CHANNEL_DB,
                         msg="Received message is: {}".format(msg['body']))
+
+    def test_2(self):
+        """ Test forced a channel ON """
+        app = MainApp(self.tmpdir.name, ['-d'])
+        app_th = Thread(target=app.run)
+        app_th.start()
+        msgbot = SendMsgBot(self.code_to_test['login'],
+                            self.tester)
+        msgbot.send_message(
+            '{"command": "force channel", "nb": "0", "action": "ON"}'
+        )
+
+        msg = msgbot.get_message()
+
+        self.assertTrue(msg['body'] == '{"status": "OK"}')
+
+        msgbot.disconnect()
+        app.stop_all()
+        app_th.join()
+
