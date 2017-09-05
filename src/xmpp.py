@@ -73,3 +73,6 @@ class XMPPData(ClientXMPP, Queue):
 
     def process(self):
         super().process(block=True)
+
+    def is_message(self):
+        return not self.messages.empty()

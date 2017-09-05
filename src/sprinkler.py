@@ -165,6 +165,7 @@ class MainApp(object):
             self.engine.stop()
         if self.xmpp is not None:
             self.xmpp.disconnect()
+        self.stop = True
 
     def __init__(self, confdir, *argv):
         '''
@@ -187,6 +188,7 @@ class MainApp(object):
         self._database = os.path.join(confdir, "channel.db")
         self.engine = None
         self.xmpp = None
+        self.stop = False
 
         # Logging configuration
         self.logger = logging.getLogger()
@@ -202,7 +204,11 @@ class MainApp(object):
         parser.add_argument('-d', '--debug',
                             help='activate debug messages on output',
                             action="store_true")
-        args = parser.parse_args(*argv)
+        if(argv):
+            args = parser.parse_args(*argv)
+        else:
+            args = parser.parse_args([])
+
         if args.debug:
             self.logger.setLevel(logging.DEBUG)
             self.logger.debug("Debug mode activated")
@@ -260,20 +266,21 @@ class MainApp(object):
             sys.exit(1)
 
         # Main loop
-        while(True):
-            msg = self.xmpp.get_message()
-            try:
-                json_msg = json.loads(msg['body'])
-                command = json_msg['command']
-                self.logger.debug("Received command '{}'".format(command))
+        while(not self.stop):
+            if self.xmpp.is_message():
+                msg = self.xmpp.get_message()
+                try:
+                    json_msg = json.loads(msg['body'])
+                    command = json_msg['command']
+                    self.logger.debug("Received command '{}'".format(command))
 
-                if command == 'get program':
-                    with open(self._database, "r") as fd:
-                        data = fd.read()
-                        msg.reply(data).send()
-            except:
-                self.logger.warning("Received unknown message: {}"
-                                    .format(msg['body']))
+                    if command == 'get program':
+                        with open(self._database, "r") as fd:
+                            data = fd.read()
+                            msg.reply(data).send()
+                except:
+                    self.logger.warning("Received unknown message: {}"
+                                        .format(msg['body']))
 
 
 if __name__ == '__main__':

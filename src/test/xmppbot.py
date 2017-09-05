@@ -37,6 +37,9 @@ class SendMsgBot(ClientXMPP):
     def get_message(self):
         return self.messages.get()
 
+    def is_message(self):
+        return not self.messages.empty()
+
     def send_message(self, msg):
         super(SendMsgBot, self).send_message(mto=self.recipient, mbody=msg)
 
