@@ -6,12 +6,13 @@ test:
 	@echo "Running tests..."
 	$(PYTEST) -m 'not longtest' --ignore=sprinkler-env
 	@echo "Done."
-	
+
 long_test:
 	@echo "Running long tests..."
 	$(PYTEST) -m 'longtest' --ignore=sprinkler-env
 	@echo "Done."
-cov: long_test
+
+cov:
 	@echo "Coverage..."
 	$(PYTEST) --cov-report html --cov  --ignore=sprinkler-env
 	@echo "Done."

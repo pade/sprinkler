@@ -25,7 +25,6 @@ class XMPPData(ClientXMPP, Queue):
         self.messages = Queue()
         self.th = Thread(target=self.process)
 
-
         self.register_plugin("xep_0030")  # Service Discovery
         self.register_plugin('xep_0004')  # Data Forms
         self.register_plugin('xep_0060')  # PubSub
@@ -74,4 +73,3 @@ class XMPPData(ClientXMPP, Queue):
 
     def process(self):
         super().process(block=True)
-
