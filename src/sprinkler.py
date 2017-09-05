@@ -11,6 +11,8 @@ from update_channels import UpdateChannels
 from engine import Engine
 from xmpp import XMPPData
 from threading import Thread
+from jsonvalidate import Validate
+
 import sys
 import os.path
 import argparse
@@ -252,8 +254,8 @@ class MainApp(object):
         '''
         # Create channels from database
         try:
-            db = open(self._database, 'r')
-            upd = UpdateChannels(db)
+            with open(self._database, 'r') as db
+                upd = UpdateChannels(db)
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
             self.xmpp = XMPPData(login=self.config['xmpp']['login'],
@@ -272,7 +274,8 @@ class MainApp(object):
                 try:
                     json_msg = json.loads(msg['body'])
                     command = json_msg['command']
-                    self.logger.debug("Received command '{}'".format(command))
+                    self.logger.debug("Received command '{}'"
+                                      .format(command))
 
                     if command == 'get program':
                         with open(self._database, "r") as fd:
@@ -281,9 +284,23 @@ class MainApp(object):
                     elif command == 'force channel':
                         nb = int(json_msg['nb'])
                         action = json_msg['action']
-                        self.logger.debug("Parameters: nb={}, action={}".format(nb, action))
+                        self.logger.debug("Parameters: nb={}, action={}"
+                                          .format(nb, action))
                         self.engine.channel_forced(nb, action)
                         msg.reply('{"status": "OK"}').send()
+                    elif command == 'new program':
+                        program = json_msg['program']
+                        self.logger.debug(
+                            "Parameter: program={}".format(program))
+                        validator = Validate()
+                        validator.validate_string(program)
+                        with open(self._database, 'w') as db:
+                            db.write(program)
+                        with open(self._database, 'r') as db
+                            upd = UpdateChannels(db)
+                        ch_list = upd.channels()
+                        self.engine = Engine(ch_list)
+
                 except:
                     self.logger.warning("Received unknown message: {}"
                                         .format(msg['body']))
