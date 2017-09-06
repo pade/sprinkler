@@ -29,7 +29,7 @@ class RaspberryGpio(BaseGpio):
     '''
     GPIO management for Raspberry
     '''
-    def __init__(self, pConfig):
+    def __init__(self, pConfig=None):
         super(RaspberryGpio, self).__init__(pConfig)
 
     def write(self, pchannel, pvalue):

@@ -254,7 +254,7 @@ class MainApp(object):
         '''
         # Create channels from database
         try:
-            with open(self._database, 'r') as db
+            with open(self._database, 'r') as db:
                 upd = UpdateChannels(db)
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
@@ -293,13 +293,15 @@ class MainApp(object):
                         self.logger.debug(
                             "Parameter: program={}".format(program))
                         validator = Validate()
-                        validator.validate_string(program)
+                        validator.validate_json(program)
                         with open(self._database, 'w') as db:
-                            db.write(program)
-                        with open(self._database, 'r') as db
+                            db.write(json.dumps(program))
+                        with open(self._database, 'r') as db:
                             upd = UpdateChannels(db)
                         ch_list = upd.channels()
+                        self.engine.stop()
                         self.engine = Engine(ch_list)
+                        msg.reply('{"status": "OK"}').send()
 
                 except:
                     self.logger.warning("Received unknown message: {}"

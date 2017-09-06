@@ -107,3 +107,9 @@ class Validate():
         """
         json_object = json.loads(data)
         validate(json_object, schema)
+
+    def validate_json(self, json):
+        """ Validate JSON object
+        @param json: JSON object
+        """
+        validate(json, schema)

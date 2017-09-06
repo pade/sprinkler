@@ -44,7 +44,7 @@ class SendMsgBot(ClientXMPP):
         super(SendMsgBot, self).send_message(mto=self.recipient, mbody=msg)
 
     def disconnect(self):
-        super(SendMsgBot, self).disconnect(wait=True)
+        super(SendMsgBot, self).disconnect(wait=False)
 
     def process(self):
         super(SendMsgBot, self).process(block=True)

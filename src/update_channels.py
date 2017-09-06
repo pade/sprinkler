@@ -5,6 +5,7 @@ from progdays import Progdays
 from stime import STime
 from jsonvalidate import Validate
 import json
+from hw.gpio import RaspberryGpio
 
 
 class UpdateChannels():
@@ -40,7 +41,7 @@ class UpdateChannels():
         for channel in self._json["channels"]:
             ch = Channel(pName=channel["name"],
                          pChNumber=channel["nb"],
-                         pHwInterface=None)
+                         pHwInterface=RaspberryGpio())
             ch.isenable = channel["is_enable"]
             ch.progs = self._progdays(channel["progdays"])
             ch_list.append(ch)
