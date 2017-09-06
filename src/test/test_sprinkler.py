@@ -312,8 +312,10 @@ class TestXMPP(unittest.TestCase):
         msgbot.disconnect()
         app.stop_all()
         app_th.join()
+        json_msg = json.loads(msg['body'])
 
-        self.assertTrue(msg['body'] == CHANNEL_DB,
+        self.assertTrue(json_msg['channels'][0]['progdays'][0]['stime']['hour']
+                        == 5,
                         msg="Received message is: {}".format(msg['body']))
 
     def test_2(self):
@@ -345,8 +347,10 @@ class TestXMPP(unittest.TestCase):
                             self.tester)
         msgbot.send_message('{"command": "get program"}')
         msg = msgbot.get_message()
+        json_msg = json.loads(msg['body'])
 
-        self.assertTrue(msg['body'] == CHANNEL_DB,
+        self.assertTrue(json_msg['channels'][0]['progdays'][0]['stime']['hour']
+                        == 5,
                         msg="Received message is: {}".format(msg['body']))
 
         msgbot.send_message('{{"command": "new program", "program": {}}}'
@@ -361,7 +365,7 @@ class TestXMPP(unittest.TestCase):
         json_msg = json.loads(msg['body'])
 
         self.assertTrue(json_msg['channels'][0]['progdays'][0]['stime']['hour']
-            == 6,
+                        == 6,
                         msg="Received message is: {}".format(msg['body']))
 
         msgbot.disconnect()
