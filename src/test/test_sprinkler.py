@@ -1,13 +1,10 @@
 # -*- coding: UTF-8 -*-
 
-import unittest
-import logging
 import sys
 import os
 from threading import Thread
-from xmppbot import SendMsgBot
-import tempfile
 import json
+import pytest
 
 
 # Set parent directory in path, to be able to import module
@@ -28,7 +25,7 @@ CHANNEL_DB = """
         {
             "nb": 0,
             "name": "Jardin",
-            "is_enable": false,
+            "is_enable": true,
             "progdays": [
                 {
                     "is_active": true,
@@ -269,105 +266,73 @@ NEW_CHANNEL_DB = """
 """
 
 
-class TestXMPP(unittest.TestCase):
-    """Functional test of sprinkler application"""
+code_to_test = {
+    'server': ("server.jabber.hot-chilli.net", 80),
+    'login': "sprinkler-tu@jabber.hot-chilli.net",
+    'password': "!s20p21!"
+}
 
-    def setUp(self):
-        self._logger = logging.getLogger()
+tester = {
+    'server': ("server.jabber.hot-chilli.net", 80),
+    'login': "sprinkler-test@jabber.hot-chilli.net",
+    'password': "!s20p21!"
+}
 
-        self.code_to_test = {
-            'server': ("server.jabber.hot-chilli.net", 80),
-            'login': "sprinkler-tu@jabber.hot-chilli.net",
-            'password': "!s20p21!"
-        }
+xmpp_info = tester
+xmpp_recipient = code_to_test['login']
 
-        self.tester = {
-            'server': ("server.jabber.hot-chilli.net", 80),
-            'login': "sprinkler-test@jabber.hot-chilli.net",
-            'password': "!s20p21!"
-        }
+@pytest.fixture(scope='function')
+def launcher(confdir):
+    app = MainApp(confdir)
+    app_th = Thread(target=app.run)
+    app_th.start()
+    yield app
+    app.stop_all()
+    app_th.join()
 
-        self.tmpdir = tempfile.TemporaryDirectory()
-        sprinkler_conf = os.path.join(self.tmpdir.name, "sprinkler.conf")
-        channel_db = os.path.join(self.tmpdir.name, "channel.db")
+def test_1(launcher, xmppbot, confdir):
+    """ Test 'get program' command """
+    xmppbot.send_message('{"command": "get program"}')
+    msg = xmppbot.get_message()
+    json_msg = json.loads(msg['body'])
 
-        with open(sprinkler_conf, "w") as fd:
-            fd.write(SPRINKLER_CONF)
-        with open(channel_db, "w") as fd:
-            fd.write(CHANNEL_DB)
+    assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 5),\
+        "Received message is: {}".format(msg['body'])
 
-    def tearDown(self):
-        self.tmpdir = None
 
-    def test_1(self):
-        """ Test 'get program' command """
-        app = MainApp(self.tmpdir.name, ['-d'])
-        app_th = Thread(target=app.run)
-        app_th.start()
-        msgbot = SendMsgBot(self.code_to_test['login'],
-                            self.tester)
-        msgbot.send_message('{"command": "get program"}')
-        msg = msgbot.get_message()
 
-        msgbot.disconnect()
-        app.stop_all()
-        app_th.join()
-        json_msg = json.loads(msg['body'])
+def test_2(launcher, xmppbot, confdir, caplog):
+    """ Test forced a channel ON """
+    xmppbot.send_message(
+        '{"command": "force channel", "nb": "0", "action": "ON"}'
+    )
 
-        self.assertTrue(json_msg['channels'][0]['progdays'][0]['stime']['hour']
-                        == 5,
-                        msg="Received message is: {}".format(msg['body']))
+    msg = xmppbot.get_message()
+    assert (msg['body'] == '{"status": "OK"}')
+    assert "Channel Jardin (0) ON" in caplog.text
 
-    def test_2(self):
-        """ Test forced a channel ON """
-        app = MainApp(self.tmpdir.name, ['-d'])
-        app_th = Thread(target=app.run)
-        app_th.start()
-        msgbot = SendMsgBot(self.code_to_test['login'],
-                            self.tester)
-        msgbot.send_message(
-            '{"command": "force channel", "nb": "0", "action": "ON"}'
-        )
+def test_3(launcher, xmppbot, confdir):
+    """ Send a new program and
+    check that it is correctly take into account """
 
-        msg = msgbot.get_message()
+    xmppbot.send_message('{"command": "get program"}')
+    msg = xmppbot.get_message()
+    json_msg = json.loads(msg['body'])
 
-        self.assertTrue(msg['body'] == '{"status": "OK"}')
+    assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 5),\
+        "Received message is: {}".format(msg['body'])
 
-        msgbot.disconnect()
-        app.stop_all()
-        app_th.join()
+    xmppbot.send_message('{{"command": "new program", "program": {}}}'
+                         .format(NEW_CHANNEL_DB))
+    msg = xmppbot.get_message()
 
-    def test_3(self):
-        """ Send a new program and
-        check that it is correctly take into account """
-        app = MainApp(self.tmpdir.name)
-        app_th = Thread(target=app.run)
-        app_th.start()
-        msgbot = SendMsgBot(self.code_to_test['login'],
-                            self.tester)
-        msgbot.send_message('{"command": "get program"}')
-        msg = msgbot.get_message()
-        json_msg = json.loads(msg['body'])
+    assert (msg['body'] == '{"status": "OK"}'),\
+        "Received message is: {}".format(msg['body'])
 
-        self.assertTrue(json_msg['channels'][0]['progdays'][0]['stime']['hour']
-                        == 5,
-                        msg="Received message is: {}".format(msg['body']))
+    xmppbot.send_message('{"command": "get program"}')
+    msg = xmppbot.get_message()
+    json_msg = json.loads(msg['body'])
 
-        msgbot.send_message('{{"command": "new program", "program": {}}}'
-                            .format(NEW_CHANNEL_DB))
-        msg = msgbot.get_message()
+    assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 6),\
+        "Received message is: {}".format(msg['body'])
 
-        self.assertTrue(msg['body'] == '{"status": "OK"}',
-                        msg="Received message is: {}".format(msg['body']))
-
-        msgbot.send_message('{"command": "get program"}')
-        msg = msgbot.get_message()
-        json_msg = json.loads(msg['body'])
-
-        self.assertTrue(json_msg['channels'][0]['progdays'][0]['stime']['hour']
-                        == 6,
-                        msg="Received message is: {}".format(msg['body']))
-
-        msgbot.disconnect()
-        app.stop_all()
-        app_th.join()

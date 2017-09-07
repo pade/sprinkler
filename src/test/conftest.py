@@ -2,7 +2,11 @@
 
 from sleekxmpp import ClientXMPP
 from threading import Thread
-from queue import Queue
+from queue import Queue, Empty
+import os
+import tempfile
+import pytest
+
 
 
 class SendMsgBot(ClientXMPP):
@@ -35,7 +39,10 @@ class SendMsgBot(ClientXMPP):
             self.messages.put(msg)
 
     def get_message(self):
-        return self.messages.get()
+        try:
+            return self.messages.get(block=True, timeout=10)
+        except Empty:
+            return None
 
     def is_message(self):
         return not self.messages.empty()
@@ -48,4 +55,35 @@ class SendMsgBot(ClientXMPP):
 
     def process(self):
         super(SendMsgBot, self).process(block=True)
+
+
+@pytest.fixture(scope='module')
+def xmppbot(request):
+    """ Create a bot to send XMPP message to sprinkler application """
+    recipient = getattr(request.module, "xmpp_recipient")
+    info = getattr(request.module, "xmpp_info")
+
+
+    xmppbot = SendMsgBot(recipient, info)
+    # Delete all pending message (if any)
+    while xmppbot.is_message():
+        xmppbot.get_message()
+    yield xmppbot
+    xmppbot.disconnect()
+
+@pytest.fixture
+def confdir(request):
+    """ Fixture to create the configuration directory used by sprinkler application """
+    default_conf = getattr(request.module, "SPRINKLER_CONF")
+    default_db = getattr(request.module, "CHANNEL_DB")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sprinkler_conf = os.path.join(tmpdir, "sprinkler.conf")
+        channel_db = os.path.join(tmpdir, "channel.db")
+
+        with open(sprinkler_conf, "w") as fd:
+            fd.write(default_conf)
+        with open(channel_db, "w") as fd:
+            fd.write(default_db)
+        yield tmpdir
 

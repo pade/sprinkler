@@ -1,16 +1,8 @@
 # -*- coding: UTF-8 -*-
-'''
-Created on 29 août 2016
-
-@author: dassierp
-'''
-
-# Ignore PyDev pep8 analysis
-# @PydevCodeAnalysisIgnore
 
 import os
 import sys
-import unittest
+import pytest
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -18,54 +10,50 @@ import channel
 from hw import gpio
 
 
-class TestChannel(unittest.TestCase):
+@pytest.fixture
+def stubhw():
+    class StubHw(gpio.BaseGpio):
 
-    def setUp(self):
-        class StubHw(gpio.BaseGpio):
+        def __init__(self, pconfig):
+            pass
 
-            def __init__(self, pconfig):
-                pass
+        def write(self, pchannel, pvalue):
+            pass
 
-            def write(self, pchannel, pvalue):
-                pass
+        def read(self, pchannel):
+            return False
 
-            def read(self, pchannel):
-                return False
+    return StubHw(None)
 
-        self.hw = StubHw(None)
+def testChannel(stubhw):
+    '''Test update of the channel status'''
+    ch = channel.Channel("Ch1", 0, stubhw)
+    ch.isenable = True
+    ch.running = True
+    assert(ch.running is True)
 
-    def tearDown(self):
-        pass
+    ch.running = False
+    assert(ch.running is False)
 
-    def testChannel(self):
-        '''Test update of the channel status'''
-        ch = channel.Channel("Ch1", 0, self.hw)
-        ch.isenable = True
-        ch.running = True
-        self.assertTrue(ch.running is True)
+def testInit(stubhw):
+    '''On init, stop water'''
+    ch = channel.Channel("Ch1", 0, stubhw)
+    assert(ch.running is False)
 
-        ch.running = False
-        self.assertTrue(ch.running is False)
+def testEnable(stubhw):
+    '''When disable channel never runs'''
+    ch = channel.Channel("Citronnier", 0, stubhw)
+    assert(ch.name == "Citronnier")
+    ch.isenable = False
+    assert(ch.running is False)
 
-    def testInit(self):
-        '''On init, stop water'''
-        ch = channel.Channel("Ch1", 0, self.hw)
-        self.assertTrue(ch.running is False)
-
-    def testEnable(self):
-        '''When disable channel never runs'''
-        ch = channel.Channel("Citronnier", 0, self.hw)
-        self.assertTrue(ch.name is "Citronnier")
-        ch.isenable = False
-        self.assertTrue(ch.running is False)
-
-    def testManual(self):
-        """Forced ON, OFF or return to AUTO"""
-        ch = channel.Channel("Citronnier", 0, self.hw)
-        self.assertTrue(ch.manual is "AUTO")
-        ch.manual = "OFF"
-        self.assertTrue(ch.manual is "OFF")
-        ch.manual = "ON"
-        self.assertTrue(ch.manual is "ON")
-        ch.manual = "DUMMY"
-        self.assertTrue(ch.manual is "AUTO")
+def testManual(stubhw):
+    """Forced ON, OFF or return to AUTO"""
+    ch = channel.Channel("Citronnier", 0, stubhw)
+    assert(ch.manual == "AUTO")
+    ch.manual = "OFF"
+    assert(ch.manual == "OFF")
+    ch.manual = "ON"
+    assert(ch.manual == "ON")
+    ch.manual = "DUMMY"
+    assert(ch.manual == "AUTO")

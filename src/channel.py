@@ -71,10 +71,10 @@ class Channel():
         if self.isenable is True:
             if pState is True:
                 self.__running = True
-                self.__logger.debug("{} ({}) ON".format(self.name, self.nb))
+                self.__logger.debug("Channel {} ({}) ON".format(self.name, self.nb))
             else:
                 self.__running = False
-                self.__logger.debug("{} ({}) OFF".format(self.name, self.nb))
+                self.__logger.debug("Channel {} ({}) OFF".format(self.name, self.nb))
             self.__hw.write(self.__nb, self.__running)
 
     def _get_prog(self):
