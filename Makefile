@@ -1,5 +1,7 @@
 # Simple makefile for quality
 
+.DEFAULT_GOAL := help
+
 PYTEST=pytest
 
 test: unit long_test functional
@@ -21,7 +23,7 @@ functional:
 
 cov:
 	@echo "Coverage..."
-	$(PYTEST) -v --cov-report html --cov  --ignore=sprinkler-env
+	$(PYTEST) -v --cov-report html --cov
 	@echo "Done."
 
 pep8:
@@ -32,8 +34,15 @@ pep8:
 autopep8:
 	@echo "Applying PEP8 coding style..."
 	@autopep8 -iva src/*.py
-	@echo "Done"
+	@echo "Done."
 
-
+help:
+	@echo "\nAvailable commands:"
+	@echo "\t-unit: Running unit tests"
+	@echo "\t-long_test: Running log duration tests"
+	@echo "\t-functional: Running functional tests"
+	@echo "\t-cov: Make coverage report"
+	@echo "\t-pep8: Checking PEP8 coding style"
+	@echo "\t-autopep8: Applying PEP8 (code is modified...)\n"
 
 check: test pep8
