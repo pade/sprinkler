@@ -10,8 +10,6 @@ Created on 9 sept. 2016
 from update_channels import UpdateChannels
 from engine import Engine
 from xmpp import XMPPData
-from threading import Thread
-from jsonvalidate import Validate
 from database import Database
 
 import sys
@@ -23,6 +21,8 @@ import signal
 import json
 import cmdparser
 
+
+__VERSION__ = "1.0.0"
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), ".sprinkler")
 CHANNEL_NB = 4
@@ -204,7 +204,8 @@ class MainApp(object):
         self.logger.addHandler(handler)
 
         parser = argparse.ArgumentParser(
-            description="Automatic sprinkler management")
+            description="Automatic sprinkler management - V{}"
+            .format(__VERSION__))
         parser.add_argument('-d', '--debug',
                             help='activate debug messages on output',
                             action="store_true")

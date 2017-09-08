@@ -184,6 +184,7 @@ class Engine(object):
         for ch in self._channels:
             if nb == ch.nb:
                 if action in ("ON", "OFF", "AUTO"):
-                    self._logger.debug("Channel {} forced to {}".format(nb, action))
+                    self._logger.debug("Channel {} forced to {}"
+                                       .format(nb, action))
                     ch.manual = action
                     self.run()
