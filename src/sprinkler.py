@@ -20,6 +20,7 @@ import logging
 import configparser
 import signal
 import json
+import cmdparser
 
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), ".sprinkler")
@@ -272,24 +273,22 @@ class MainApp(object):
             if self.xmpp.is_message():
                 msg = self.xmpp.get_message()
                 try:
-                    json_msg = json.loads(msg['body'])
-                    command = json_msg['command']
+                    p = cmdparser.Parser(msg['body'])
                     self.logger.debug("Received command '{}'"
-                                      .format(command))
-
-                    if command == 'get program':
+                                      .format(p.get_command()))
+                    if p.get_command() == 'get program':
                         with open(self._database, "r") as fd:
                             data = fd.read()
                             msg.reply(data).send()
-                    elif command == 'force channel':
-                        nb = int(json_msg['nb'])
-                        action = json_msg['action']
+                    elif p.get_command() == 'force channel':
+                        nb = p.get_param()['nb']
+                        action = p.get_param()['action']
                         self.logger.debug("Parameters: nb={}, action={}"
                                           .format(nb, action))
                         self.engine.channel_forced(nb, action)
                         msg.reply('{"status": "OK"}').send()
-                    elif command == 'new program':
-                        program = json_msg['program']
+                    elif p.get_command() == 'new program':
+                        program = p.get_param()['program']
                         self.logger.debug(
                             "Parameter: program={}".format(program))
                         validator = Validate()
