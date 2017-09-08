@@ -281,14 +281,16 @@ tester = {
 xmpp_info = tester
 xmpp_recipient = code_to_test['login']
 
+
 @pytest.fixture(scope='function')
 def launcher(confdir):
-    app = MainApp(confdir)
+    app = MainApp(confdir, ['-d'])
     app_th = Thread(target=app.run)
     app_th.start()
     yield app
     app.stop_all()
     app_th.join()
+
 
 def test_1(launcher, xmppbot, confdir):
     """ Test 'get program' command """
@@ -300,16 +302,15 @@ def test_1(launcher, xmppbot, confdir):
         "Received message is: {}".format(msg['body'])
 
 
-
 def test_2(launcher, xmppbot, confdir, caplog):
     """ Test forced a channel ON """
     xmppbot.send_message(
         '{"command": "force channel", "nb": "0", "action": "ON"}'
     )
-
     msg = xmppbot.get_message()
     assert (msg['body'] == '{"status": "OK"}')
     assert "Channel Jardin (0) ON" in caplog.text
+
 
 def test_3(launcher, xmppbot, confdir):
     """ Send a new program and

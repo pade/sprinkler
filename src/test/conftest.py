@@ -8,7 +8,6 @@ import tempfile
 import pytest
 
 
-
 class SendMsgBot(ClientXMPP):
 
     def __init__(self, recipient, xmpp_info):
@@ -40,7 +39,7 @@ class SendMsgBot(ClientXMPP):
 
     def get_message(self):
         try:
-            return self.messages.get(block=True, timeout=10)
+            return self.messages.get(block=True, timeout=30)
         except Empty:
             return None
 
@@ -63,7 +62,6 @@ def xmppbot(request):
     recipient = getattr(request.module, "xmpp_recipient")
     info = getattr(request.module, "xmpp_info")
 
-
     xmppbot = SendMsgBot(recipient, info)
     # Delete all pending message (if any)
     while xmppbot.is_message():
@@ -71,9 +69,11 @@ def xmppbot(request):
     yield xmppbot
     xmppbot.disconnect()
 
+
 @pytest.fixture
 def confdir(request):
-    """ Fixture to create the configuration directory used by sprinkler application """
+    """ Fixture to create the configuration directory used
+    by sprinkler application """
     default_conf = getattr(request.module, "SPRINKLER_CONF")
     default_db = getattr(request.module, "CHANNEL_DB")
 
@@ -86,4 +86,3 @@ def confdir(request):
         with open(channel_db, "w") as fd:
             fd.write(default_db)
         yield tmpdir
-

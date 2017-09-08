@@ -27,6 +27,7 @@ class StubHw(gpio.BaseGpio):
     def read(self, pchannel):
         return self.cmd
 
+
 class ChannelInit():
 
     def __init__(self):

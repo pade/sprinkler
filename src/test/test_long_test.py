@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 from datetime import datetime, timedelta
-import unittest
 from unittest.mock import MagicMock
 import pytest
 import sys
@@ -10,32 +9,32 @@ import os
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import engine
-import channel
+from channel import Channel
 import progdays
 import stime
 from hw import gpio
 
 
-@pytest.mark.longtest
-class TestLongTime(unittest.TestCase):
+class StubHw(gpio.BaseGpio):
 
-    def setUp(self):
-        class StubHw(gpio.BaseGpio):
+    def __init__(self, pconfig):
+        self.cfg = pconfig
+        self.cmd = False
 
-            def __init__(self, pconfig):
-                self.cfg = pconfig
-                self.cmd = False
+    def write(self, pchannel, pvalue):
+        self.cmd = pvalue
 
-            def write(self, pchannel, pvalue):
-                self.cmd = pvalue
+    def read(self, pchannel):
+        return self.cmd
 
-            def read(self, pchannel):
-                return self.cmd
 
+class ChannelInit():
+
+    def __init__(self):
         self.hw1 = StubHw(None)
         self.hw2 = StubHw(None)
-        self.ch1 = channel.Channel("Channel 1", 0, self.hw1)
-        self.ch2 = channel.Channel("Channel 2", 1, self.hw2)
+        self.ch1 = Channel("Channel 1", 0, self.hw1)
+        self.ch2 = Channel("Channel 2", 1, self.hw2)
 
         self.ch1.progs = [progdays.Progdays(), progdays.Progdays()]
         self.ch2.progs = [progdays.Progdays(), progdays.Progdays()]
@@ -47,31 +46,34 @@ class TestLongTime(unittest.TestCase):
         self.ch1.progs[0].isactive = True
         self.ch1.progs[0].set_days([True, True, True, True, True, True, True])
 
-    def tearDown(self):
+
+@pytest.fixture
+def channel():
+    return ChannelInit()
+
+
+@pytest.mark.longtest
+def test_long_time(channel):
+    """ Long time test, using scheduler function
+    """
+
+    e = engine.Engine([channel.ch1])
+    assert(not channel.hw1.cmd)
+
+    now_plus_3 = datetime.now() + timedelta(minutes=3)
+    while (not channel.hw1.cmd) and (now_plus_3 > datetime.now()):
         pass
 
-    def test_long_time(self):
-        """ Long time test, using scheduler function
-        """
+    assert(channel.hw1.cmd)
 
-        e = engine.Engine([self.ch1])
+    now_plus_3 = datetime.now() + timedelta(minutes=3)
+    while (channel.hw1.cmd) and (now_plus_3 > datetime.now()):
+        pass
 
-        self.assertFalse(self.hw1.cmd)
+    assert(not channel.hw1.cmd)
 
-        now_plus_3 = datetime.now() + timedelta(minutes=3)
-        while (not self.hw1.cmd) and (now_plus_3 > datetime.now()):
-            pass
+    e.stop()
 
-        self.assertTrue(self.hw1.cmd)
-
-        now_plus_3 = datetime.now() + timedelta(minutes=3)
-        while (self.hw1.cmd) and (now_plus_3 > datetime.now()):
-            pass
-
-        self.assertFalse(self.hw1.cmd)
-
-        e.stop()
-
-    # Set 'long_test' attribute to run this specific test
-    # without running others
-    test_long_time.long_test = True
+# Set 'long_test' attribute to run this specific test
+# without running others
+test_long_time.long_test = True
