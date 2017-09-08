@@ -2,14 +2,21 @@
 
 PYTEST=pytest
 
-test:
-	@echo "Running tests..."
-	$(PYTEST) -v -m 'not longtest' --ignore=sprinkler-env
+test: unit long_test functional
+
+unit:
+	@echo "Running unit tests..."
+	$(PYTEST) -v -m 'not longtest and not functional' --ignore=sprinkler-env
 	@echo "Done."
 
 long_test:
 	@echo "Running long tests..."
 	$(PYTEST) -v -m 'longtest' --ignore=sprinkler-env
+	@echo "Done."
+
+functional:
+	@echo "Running functional tests..."
+	$(PYTEST) -v -m 'functional' --ignore=sprinkler-env
 	@echo "Done."
 
 cov:
@@ -24,4 +31,4 @@ pep8:
 
 
 
-check: cov pep8
+check: test pep8

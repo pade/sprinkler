@@ -292,6 +292,7 @@ def launcher(confdir):
     app_th.join()
 
 
+@pytest.mark.functional
 def test_1(launcher, xmppbot, confdir):
     """ Test 'get program' command """
     xmppbot.send_message('{"command": "get program"}')
@@ -302,6 +303,7 @@ def test_1(launcher, xmppbot, confdir):
         "Received message is: {}".format(msg['body'])
 
 
+@pytest.mark.functional
 def test_2(launcher, xmppbot, confdir, caplog):
     """ Test forced a channel ON """
     xmppbot.send_message(
@@ -312,6 +314,7 @@ def test_2(launcher, xmppbot, confdir, caplog):
     assert "Channel Jardin (0) ON" in caplog.text
 
 
+@pytest.mark.functional
 def test_3(launcher, xmppbot, confdir):
     """ Send a new program and
     check that it is correctly take into account """
@@ -336,4 +339,3 @@ def test_3(launcher, xmppbot, confdir):
 
     assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 6),\
         "Received message is: {}".format(msg['body'])
-

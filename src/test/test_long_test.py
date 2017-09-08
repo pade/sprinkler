@@ -73,7 +73,3 @@ def test_long_time(channel):
     assert(not channel.hw1.cmd)
 
     e.stop()
-
-# Set 'long_test' attribute to run this specific test
-# without running others
-test_long_time.long_test = True

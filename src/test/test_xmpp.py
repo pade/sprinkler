@@ -23,17 +23,20 @@ tester = {
 xmpp_info = tester
 xmpp_recipient = code_to_test['login']
 
+
 def test_connexion(xmppbot):
     """ Test XMPP connexion """
     xmpp_con = xmpp.XMPPData(login=code_to_test['login'],
-                        password=code_to_test['password'],
-                        server=code_to_test['server'])
+                             password=code_to_test['password'],
+                             server=code_to_test['server'])
+
+    # purge message pipe
+    while xmpp_con.is_message():
+        xmpp_con.get_message()
 
     xmppbot.send_message("Hello my friend :)!")
 
-    msg = xmpp_con.get_message() # wait until message is received
+    msg = xmpp_con.get_message()  # wait until message is received
     xmpp_con.disconnect()
 
     assert msg['body'] == "Hello my friend :)!"
-
-
