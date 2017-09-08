@@ -298,7 +298,7 @@ class MainApp(object):
                         self.engine = Engine(ch_list)
                         msg.reply('{"status": "OK"}').send()
 
-                except:
+                except BaseException:
                     self.logger.warning("Received unknown message: {}"
                                         .format(msg['body']))
 

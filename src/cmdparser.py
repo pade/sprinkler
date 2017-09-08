@@ -8,6 +8,7 @@ action_list = ("ON", "OFF", "AUTO")
 
 class Parser(object):
     """ Parse XMPP message """
+
     def __init__(self, msg):
         self.message = msg
         self.command = None
@@ -32,7 +33,7 @@ class Parser(object):
             elif self.command == "new program":
                 program = json_msg['program']
                 self.param = {'program': program}
-        except:
+        except BaseException:
             raise ParserError(self.message)
 
     def get_command(self):

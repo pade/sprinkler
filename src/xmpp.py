@@ -61,7 +61,8 @@ class XMPPData(ClientXMPP, Queue):
     def message(self, msg):
         if msg['type'] in ('normal', 'chat'):
             self._logger.debug(
-                "Receiving message from {}: {}".format(msg['from'], msg['body']))
+                "Receiving message from {}: {}"
+                .format(msg['from'], msg['body']))
             self.messages.put(msg)
 
     def disconnect(self):
