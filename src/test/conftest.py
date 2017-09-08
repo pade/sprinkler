@@ -86,3 +86,11 @@ def confdir(request):
         with open(channel_db, "w") as fd:
             fd.write(default_db)
         yield tmpdir
+
+
+@pytest.fixture
+def tmpfile():
+    """ Define a names temporary file """
+    import tempfile
+    with tempfile.NamedTemporaryFile() as tmpf:
+        yield tmpf

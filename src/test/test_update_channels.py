@@ -2,19 +2,24 @@
 
 import sys
 import os
+import json
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import update_channels
+import database
+
 
 curpath = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_update():
+def test_update(tmpfile):
     """ Test update channels """
-
-    upd = update_channels.UpdateChannels(
-        os.path.join(curpath, "json_ok_2.js"))
+    db = database.Database(tmpfile.name)
+    with open(os.path.join(curpath, "json_ok_2.js"), 'r') as fd:
+        jsok = json.loads(fd.read())
+    db.write(jsok)
+    upd = update_channels.UpdateChannels(db)
 
     channels = upd.channels()
 

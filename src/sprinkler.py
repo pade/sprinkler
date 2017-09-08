@@ -12,6 +12,7 @@ from engine import Engine
 from xmpp import XMPPData
 from threading import Thread
 from jsonvalidate import Validate
+from database import Database
 
 import sys
 import os.path
@@ -188,7 +189,7 @@ class MainApp(object):
                 sys.exit(1)
 
         self._configfile = os.path.join(confdir, "sprinkler.conf")
-        self._database = os.path.join(confdir, "channel.db")
+        self._database = Database(os.path.join(confdir, "channel.db"))
         self.engine = None
         self.xmpp = None
         self.stop = False
@@ -241,9 +242,9 @@ class MainApp(object):
                 self.config.write(configfile)
 
         # Create channel data base if not exists
-        if not os.path.isfile(self._database):
+        if not self._database.file_exists():
             try:
-                with open(self._database, 'w') as f:
+                with open(self._database.dbfile, 'w') as f:
                     f.write(DEFAULT_DATABASE)
             except Exception:
                 self.logger.info("FATAL ERROR", exc_info=True)
@@ -255,8 +256,7 @@ class MainApp(object):
         '''
         # Create channels from database
         try:
-            with open(self._database, 'r') as db:
-                upd = UpdateChannels(db)
+            upd = UpdateChannels(self._database)
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
             self.xmpp = XMPPData(login=self.config['xmpp']['login'],
@@ -277,9 +277,8 @@ class MainApp(object):
                     self.logger.debug("Received command '{}'"
                                       .format(p.get_command()))
                     if p.get_command() == 'get program':
-                        with open(self._database, "r") as fd:
-                            data = fd.read()
-                            msg.reply(data).send()
+                        data = self._database.read()
+                        msg.reply(json.dumps(data)).send()
                     elif p.get_command() == 'force channel':
                         nb = p.get_param()['nb']
                         action = p.get_param()['action']
@@ -291,12 +290,8 @@ class MainApp(object):
                         program = p.get_param()['program']
                         self.logger.debug(
                             "Parameter: program={}".format(program))
-                        validator = Validate()
-                        validator.validate_json(program)
-                        with open(self._database, 'w') as db:
-                            db.write(json.dumps(program))
-                        with open(self._database, 'r') as db:
-                            upd = UpdateChannels(db)
+                        self._database.write(program)
+                        upd = UpdateChannels(self._database)
                         ch_list = upd.channels()
                         self.engine.stop()
                         self.engine = Engine(ch_list)

@@ -95,21 +95,27 @@ class Validate():
         """ Validate JSON file
         @param filenbame: full path to JSON file
         raise an excpetion in case of error
+        @return: JSON object
         """
         with open(filename, "r") as fd:
             json_string = fd.read()
             json_object = json.loads(json_string)
             validate(json_object, schema)
+        return json_object
 
     def validate_string(self, data):
         """ Validate JSON string
         @param data: JSON string
+        @return: JSON object
         """
         json_object = json.loads(data)
         validate(json_object, schema)
+        return json_object
 
     def validate_json(self, json):
         """ Validate JSON object
         @param json: JSON object
+        @return: JSON object
         """
         validate(json, schema)
+        return json

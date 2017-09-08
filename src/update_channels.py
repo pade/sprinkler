@@ -13,32 +13,16 @@ class UpdateChannels():
 
     def __init__(self, database):
         """ Initilisation
-        @param database: file descriptor or filename of database
+        @param database: Database class instance to access to DB
         """
-        self.read_db(database)
-
-    def read_db(self, database):
-        """ Read database
-        @param database: file descriptor or filename of database
-        raise an error in case of malformed JSON
-        """
-        if hasattr(database, "read"):
-            # database parameter is a file descriptor
-            self._db = database.read()
-        else:
-            with open(database, "r") as fd:
-                self._db = fd.read()
-
-        validate = Validate()
-        validate.validate_string(self._db)
-        self._json = json.loads(self._db)
+        self._db = database.read()
 
     def channels(self):
         """ Create new Channel object according to database
         @return: list of channel
         """
         ch_list = []
-        for channel in self._json["channels"]:
+        for channel in self._db["channels"]:
             ch = Channel(pName=channel["name"],
                          pChNumber=channel["nb"],
                          pHwInterface=RaspberryGpio())
