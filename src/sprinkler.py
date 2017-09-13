@@ -16,6 +16,7 @@ import sys
 import os.path
 import argparse
 import logging
+import logging.handlers
 import configparser
 import signal
 import json
@@ -190,6 +191,7 @@ class MainApp(object):
 
         self._configfile = os.path.join(confdir, "sprinkler.conf")
         self._database = Database(os.path.join(confdir, "channel.db"))
+        logfile = os.path.join(confdir, "sprinkler.log")
         self.engine = None
         self.xmpp = None
         self.stop = False
@@ -199,9 +201,9 @@ class MainApp(object):
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter(
             '%(asctime)s - %(filename)s [%(levelname)s] %(message)s')
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
+        streamhandler = logging.StreamHandler(sys.stdout)
+        streamhandler.setFormatter(formatter)
+        self.logger.addHandler(streamhandler)
 
         parser = argparse.ArgumentParser(
             description="Automatic sprinkler management - V{}"
@@ -250,6 +252,13 @@ class MainApp(object):
             except Exception:
                 self.logger.info("FATAL ERROR", exc_info=True)
                 sys.exit(1)
+
+        # Create log file
+        filehandler = logging.handlers.RotatingFileHandler(logfile,
+                                                           maxBytes=10000000,
+                                                           backupCount=5)
+        filehandler.setFormatter(formatter)
+        self.logger.addHandler(filehandler)
 
     def run(self):
         '''
