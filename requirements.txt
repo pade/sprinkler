@@ -8,7 +8,6 @@ dnspython>=1.15.0
 idna>=2.7
 jsonschema>=2.6.0
 more-itertools>=4.3.0
-pep8>=1.7.1
 pkg-resources>=0.0.0
 pluggy>=0.8.0
 py>=1.7.0

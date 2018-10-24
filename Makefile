@@ -28,7 +28,7 @@ cov:
 
 pep8:
 	@echo "Cheking PEP8 coding style..."
-	@pep8 . --exclude="sprinkler-env,docs,test*" --max-line-length=90
+	@pycodestyle . --exclude="sprinkler-env,docs,test*" --max-line-length=90
 	@echo "Done."
 
 autopep8:
