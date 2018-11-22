@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from sleekxmpp import ClientXMPP
+from slixmpp import ClientXMPP
 from threading import Thread
 from queue import Queue, Empty
 import os
@@ -11,20 +11,19 @@ import pytest
 class SendMsgBot(ClientXMPP):
 
     def __init__(self, recipient, xmpp_info):
-        super(SendMsgBot, self).__init__(xmpp_info['login'],
-                                         xmpp_info['password'])
-
+        super(SendMsgBot, self).__init__(jid=xmpp_info['login'],
+                                         password=xmpp_info['password'])
+ 
         self.recipient = recipient
         self.messages = Queue()
         self.th = Thread(target=self.process)
-
+ 
         self._server = xmpp_info['server']
-
+ 
         self.add_event_handler('session_start', self.start)
         self.add_event_handler("message", self.message)
-
+ 
         self.connect()
-        self.th.start()
 
     def start(self, event):
         self.send_presence()
@@ -32,6 +31,7 @@ class SendMsgBot(ClientXMPP):
 
     def connect(self):
         super(SendMsgBot, self).connect(self._server)
+        self.th.start()
 
     def message(self, msg):
         if msg['type'] in ('normal', 'chat'):
@@ -53,7 +53,7 @@ class SendMsgBot(ClientXMPP):
         super(SendMsgBot, self).disconnect(wait=False)
 
     def process(self):
-        super(SendMsgBot, self).process(block=True)
+        super(SendMsgBot, self).process(forever=True)
 
 
 @pytest.fixture(scope='module')
@@ -62,12 +62,12 @@ def xmppbot(request):
     recipient = getattr(request.module, "xmpp_recipient")
     info = getattr(request.module, "xmpp_info")
 
-    xmppbot = SendMsgBot(recipient, info)
-    # Delete all pending message (if any)
-    while xmppbot.is_message():
-        xmppbot.get_message()
-    yield xmppbot
-    xmppbot.disconnect()
+    # xmppbot = SendMsgBot(recipient, info)
+    # # Delete all pending message (if any)
+    # while xmppbot.is_message():
+    #     xmppbot.get_message()
+    # yield xmppbot
+    # xmppbot.disconnect()
 
 
 @pytest.fixture

@@ -4,12 +4,12 @@
 import logging
 import sys
 from queue import Queue
-from sleekxmpp import ClientXMPP
+from slixmpp import ClientXMPP
 from threading import Thread
-from sleekxmpp.exceptions import IqError, IqTimeout
+from slixmpp.exceptions import IqError, IqTimeout
 
 
-class XMPPData(ClientXMPP, Queue):
+class XMPPData(ClientXMPP):
     """Manage connexion with external device"""
 
     def __init__(self, login, password, server=()):
@@ -38,14 +38,9 @@ class XMPPData(ClientXMPP, Queue):
     def connect(self):
         self._logger.info("Connection to {}:{}".format(
             self._server[0], self._server[1]))
-        con = super().connect(self._server)
-
-        if not con:
-            self._logger.error("Unable to connect")
-        else:
-            self._logger.info("Connexion established")
-            self.th.start()
-
+        super().connect()
+        self.th.start()
+        
     def session_start(self, event):
         self.send_presence()
         try:
@@ -65,14 +60,15 @@ class XMPPData(ClientXMPP, Queue):
                 .format(msg['from'], msg['body']))
             self.messages.put(msg)
 
-    def disconnect(self):
+    def stop(self):
         super().disconnect(wait=False)
+        self.loop.stop()
 
-    def get_message(self):
-        return self.messages.get()
+    def get_message(self, timeout=None):
+        return self.messages.get(timeout=timeout)
 
     def process(self):
-        super().process(block=True)
+        super().process(forever=True)
 
     def is_message(self):
         return not self.messages.empty()

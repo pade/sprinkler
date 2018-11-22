@@ -169,7 +169,7 @@ class MainApp(object):
         if self.engine is not None:
             self.engine.stop()
         if self.xmpp is not None:
-            self.xmpp.disconnect()
+            self.xmpp.stop()
         self.stop = True
 
     def __init__(self, confdir, *argv):

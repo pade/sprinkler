@@ -267,13 +267,13 @@ NEW_CHANNEL_DB = """
 
 
 code_to_test = {
-    'server': ("server.jabber.hot-chilli.net", 80),
+    'server': ("server.jabber.hot-chilli.net", 443),
     'login': "sprinkler-tu@jabber.hot-chilli.net",
     'password': "!s20p21!"
 }
 
 tester = {
-    'server': ("server.jabber.hot-chilli.net", 80),
+    'server': ("server.jabber.hot-chilli.net", 443),
     'login': "sprinkler-test@jabber.hot-chilli.net",
     'password': "!s20p21!"
 }
