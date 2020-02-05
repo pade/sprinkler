@@ -25,7 +25,7 @@ class Scheduler(object):
         self._stop = Event()
         self._sched = Thread(target=self._run, args=(target, args, self._stop))
         self._sched.start()
-        self._logger = logging.getLogger()
+        self._logger = logging.getLogger('sprinkler')
 
     def _run(self, target, args, stop):
         '''

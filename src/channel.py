@@ -23,7 +23,7 @@ class Channel():
         '''
         self.__nb = pChNumber
         self.__hw = pHwInterface
-        self.__logger = logging.getLogger()
+        self.__logger = logging.getLogger('sprinkler')
         self.__is_enable = False
         self.__manual = "AUTO"
         self.__name = pName

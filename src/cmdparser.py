@@ -7,7 +7,7 @@ action_list = ("ON", "OFF", "AUTO")
 
 
 class Parser(object):
-    """ Parse XMPP message """
+    """ Parse received message """
 
     def __init__(self, msg):
         self.message = msg

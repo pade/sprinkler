@@ -12,7 +12,7 @@ class Progdays():
         self.stime = STime()
         # table of days: first is monday, last is sunday
         self._days = [False, False, False, False, False, False, False]
-        self._logger = logging.getLogger()
+        self._logger = logging.getLogger('sprinkler')
 
     def _set_isactive(self, activate):
         self._isactive = activate

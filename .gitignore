@@ -148,3 +148,4 @@ local.properties
 .recommenders/
 
 sprinkler-env
+.vscode/

@@ -25,7 +25,7 @@ class StateMachine():
     def __init__(self):
         self._list = {}
         self._current = None
-        self._logger = logging.getLogger()
+        self._logger = logging.getLogger('sprinkler')
 
     def register(self, name, callback, args=[]):
         """ Register a new state

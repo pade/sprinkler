@@ -1,74 +1,12 @@
 # -*- coding: UTF-8 -*-
 
-from slixmpp import ClientXMPP
 from threading import Thread
 from queue import Queue, Empty
 import os
+import sys
 import tempfile
 import pytest
-
-
-class SendMsgBot(ClientXMPP):
-
-    def __init__(self, recipient, xmpp_info):
-        super(SendMsgBot, self).__init__(jid=xmpp_info['login'],
-                                         password=xmpp_info['password'])
- 
-        self.recipient = recipient
-        self.messages = Queue()
-        self.th = Thread(target=self.process)
- 
-        self._server = xmpp_info['server']
- 
-        self.add_event_handler('session_start', self.start)
-        self.add_event_handler("message", self.message)
- 
-        self.connect()
-
-    def start(self, event):
-        self.send_presence()
-        self.get_roster()
-
-    def connect(self):
-        super(SendMsgBot, self).connect(self._server)
-        self.th.start()
-
-    def message(self, msg):
-        if msg['type'] in ('normal', 'chat'):
-            self.messages.put(msg)
-
-    def get_message(self):
-        try:
-            return self.messages.get(block=True, timeout=30)
-        except Empty:
-            return None
-
-    def is_message(self):
-        return not self.messages.empty()
-
-    def send_message(self, msg):
-        super(SendMsgBot, self).send_message(mto=self.recipient, mbody=msg)
-
-    def disconnect(self):
-        super(SendMsgBot, self).disconnect(wait=False)
-
-    def process(self):
-        super(SendMsgBot, self).process(forever=True)
-
-
-@pytest.fixture(scope='module')
-def xmppbot(request):
-    """ Create a bot to send XMPP message to sprinkler application """
-    recipient = getattr(request.module, "xmpp_recipient")
-    info = getattr(request.module, "xmpp_info")
-
-    # xmppbot = SendMsgBot(recipient, info)
-    # # Delete all pending message (if any)
-    # while xmppbot.is_message():
-    #     xmppbot.get_message()
-    # yield xmppbot
-    # xmppbot.disconnect()
-
+import logging
 
 @pytest.fixture
 def confdir(request):

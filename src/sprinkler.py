@@ -9,7 +9,7 @@ Created on 9 sept. 2016
 
 from update_channels import UpdateChannels
 from engine import Engine
-from xmpp import XMPPData
+from messages import Messages
 from database import Database
 
 import sys
@@ -21,6 +21,7 @@ import configparser
 import signal
 import json
 import cmdparser
+from uuid import uuid4
 
 
 __VERSION__ = "1.0.0"
@@ -168,8 +169,8 @@ class MainApp(object):
     def stop_all(self):
         if self.engine is not None:
             self.engine.stop()
-        if self.xmpp is not None:
-            self.xmpp.stop()
+        if self.messages is not None:
+            self.messages.stop()
         self.stop = True
 
     def __init__(self, confdir, *argv):
@@ -193,11 +194,11 @@ class MainApp(object):
         self._database = Database(os.path.join(confdir, "channel.db"))
         logfile = os.path.join(confdir, "sprinkler.log")
         self.engine = None
-        self.xmpp = None
+        self.messages = None
         self.stop = False
 
         # Logging configuration
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger('sprinkler')
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter(
             '%(asctime)s - %(filename)s [%(levelname)s] %(message)s')
@@ -235,11 +236,10 @@ class MainApp(object):
             self.config['meteo'] = {
                 'url':
                 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
-            self.config['xmpp'] = {
-                'server': 'https://...',
-                'port': '443',
-                'login': '<put login here>',
-                'password': '<put password here>'
+            self.config['messages'] = {
+                'pubnub_subkey': 'sub-...',
+                'pubnub_pubkey': 'pub-...',
+                'id': str(uuid4()),
             }
             with open(self._configfile, 'w') as configfile:
                 self.config.write(configfile)
@@ -269,10 +269,9 @@ class MainApp(object):
             upd = UpdateChannels(self._database)
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
-            self.xmpp = XMPPData(login=self.config['xmpp']['login'],
-                                 password=self.config['xmpp']['password'],
-                                 server=(self.config['xmpp']['server'],
-                                         self.config['xmpp']['port']))
+            self.messages = Messages(subkey=self.config['messages']['pubnub_subkey'],
+                                 pubkey=self.config['messages']['pubnub_pubkey'],
+                                 id=self.config['messages']['id'])
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
             self.stop_all()
@@ -280,22 +279,22 @@ class MainApp(object):
 
         # Main loop
         while(not self.stop):
-            if self.xmpp.is_message():
-                msg = self.xmpp.get_message()
+            if self.messages.is_message():
+                msg = self.messages.get_message()
                 try:
-                    p = cmdparser.Parser(msg['body'])
+                    p = cmdparser.Parser(msg)
                     self.logger.debug("Received command '{}'"
                                       .format(p.get_command()))
                     if p.get_command() == 'get program':
                         data = self._database.read()
-                        msg.reply(json.dumps(data)).send()
+                        self.messages.send(json.dumps(data))
                     elif p.get_command() == 'force channel':
                         nb = p.get_param()['nb']
                         action = p.get_param()['action']
                         self.logger.debug("Parameters: nb={}, action={}"
                                           .format(nb, action))
                         self.engine.channel_forced(nb, action)
-                        msg.reply('{"status": "OK"}').send()
+                        self.messages.send('{"status": "OK"}')
                     elif p.get_command() == 'new program':
                         program = p.get_param()['program']
                         self.logger.debug(
@@ -305,11 +304,11 @@ class MainApp(object):
                         ch_list = upd.channels()
                         self.engine.stop()
                         self.engine = Engine(ch_list)
-                        msg.reply('{"status": "OK"}').send()
+                        self.messages.send('{"status": "OK"}')
 
                 except BaseException:
                     self.logger.warning("Received unknown message: {}"
-                                        .format(msg['body']))
+                                        .format(msg))
 
 
 if __name__ == '__main__':

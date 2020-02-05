@@ -32,7 +32,7 @@ class Engine(object):
             self._statemachine[ch.nb].setState("NotRunning")
 
         self._sched = Scheduler(self.run)
-        self._logger = logging.getLogger()
+        self._logger = logging.getLogger('sprinkler')
 
     def get_datetime_now(self):
         return datetime.datetime.now()

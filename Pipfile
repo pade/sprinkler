@@ -4,14 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-slixmpp = "*"
 requests = "*"
 jsonschema = "*"
+pubnub = "*"
 
 [dev-packages]
 pylint = "*"
 pytest = "*"
 pytest-cov = "*"
+rope = "*"
+env-file = "*"
 
 [requires]
 python_version = "3.7"
