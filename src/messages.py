@@ -12,6 +12,7 @@ from pubnub.exceptions import PubNubException
 from pubnub.pubnub import PubNub, SubscribeListener
 from pubnub.enums import PNReconnectionPolicy
 
+
 class Messages():
     """Manage connexion with external device"""
 
@@ -29,9 +30,9 @@ class Messages():
 
             def message(self, pubnub, message):
                 if message.message['sender'] != pubnub.uuid:
-                    self._logger.debug(f"RECV from {message.message['sender']}: {message.message['content']}")
+                    self._logger.debug(f"RECV from {message.message['sender']}: \
+                        {message.message['content']}")
                     super().message(pubnub, message.message['content'])
-    
 
         self._logger = logging.getLogger('sprinkler')
 
@@ -51,7 +52,8 @@ class Messages():
 
     def send(self, msg):
         try:
-            self.pubnub.publish().channel("sprinkler").message({'sender': self.pubnub.uuid, 'content': msg}).sync()
+            self.pubnub.publish().channel("sprinkler")\
+                .message({'sender': self.pubnub.uuid, 'content': msg}).sync()
             self._logger.debug(f"SEND from {self.pubnub.uuid}: {msg}")
         except PubNubException as e:
             self._logger.error("Sending error: " + str(e))

@@ -270,8 +270,8 @@ class MainApp(object):
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
             self.messages = Messages(subkey=self.config['messages']['pubnub_subkey'],
-                                 pubkey=self.config['messages']['pubnub_pubkey'],
-                                 id=self.config['messages']['id'])
+                                     pubkey=self.config['messages']['pubnub_pubkey'],
+                                     id=self.config['messages']['id'])
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
             self.stop_all()
