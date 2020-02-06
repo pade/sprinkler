@@ -2,7 +2,6 @@
 
 import sys
 import os
-import env_file
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub, SubscribeListener
 import pubnub
@@ -17,10 +16,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import messages
 
 @pytest.fixture
-def pubnub_bot():
-    path = Path(os.path.dirname(os.path.abspath(__file__)))
-    env_file.load(os.path.join(path.parent.parent, ".env"))
-    # Now PUBKEY, SUBKEY and PUBNUBID are defined
+def pubnub_bot(setenv):
     pnconfig = PNConfiguration()
     pnconfig.subscribe_key = os.environ['SUBKEY']
     pnconfig.publish_key = os.environ['PUBKEY']
@@ -33,7 +29,7 @@ def pubnub_bot():
     pubnub_bot.unsubscribe_all()
     pubnub_bot.stop()
 
-def test_receive(pubnub_bot, caplog):
+def test_receive(pubnub_bot, caplog, setenv):
     """ Test PubNub receive """
 
     caplog.set_level(logging.DEBUG)
@@ -56,7 +52,7 @@ def test_receive(pubnub_bot, caplog):
 
     msg_con.stop()
 
-def test_send(pubnub_bot, caplog):
+def test_send(pubnub_bot, caplog, setenv):
     """ Test PubNub send """
 
     caplog.set_level(logging.DEBUG, logger="sprinkler")

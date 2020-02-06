@@ -5,7 +5,6 @@ import os
 from threading import Thread
 import json
 import pytest
-import env_file
 from pathlib import Path
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub, SubscribeListener
@@ -14,10 +13,6 @@ import logging
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from sprinkler import MainApp
-
-path = Path(os.path.dirname(os.path.abspath(__file__)))
-env_file.load(os.path.join(path.parent.parent, ".env"))
-# Now PUBKEY, SUBKEY and PUBNUBID are defined
 
 SPRINKLER_CONF = f"""
 [messages]
@@ -282,10 +277,7 @@ def launcher(confdir):
     app_th.join()
 
 @pytest.fixture
-def pubnub_bot():
-    path = Path(os.path.dirname(os.path.abspath(__file__)))
-    env_file.load(os.path.join(path.parent.parent, ".env"))
-    # Now PUBKEY, SUBKEY and PUBNUBID are defined
+def pubnub_bot(setenv):
     pnconfig = PNConfiguration()
     pnconfig.subscribe_key = os.environ['SUBKEY']
     pnconfig.publish_key = os.environ['PUBKEY']
@@ -307,7 +299,7 @@ def pubnub_bot():
     pubnub_bot.stop()
 
 @pytest.mark.functional
-def test_1(launcher, confdir, pubnub_bot):
+def test_1(launcher, confdir, pubnub_bot, setenv):
     """ Test 'get program' command """
     logger = logging.getLogger('test')
     logger.setLevel(logging.DEBUG)
@@ -326,7 +318,7 @@ def test_1(launcher, confdir, pubnub_bot):
 
 
 @pytest.mark.functional
-def test_2(launcher, confdir, caplog, pubnub_bot):
+def test_2(launcher, confdir, caplog, pubnub_bot, setenv):
     """ Test forced a channel ON """
     pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": '{"command": "force channel", "nb": "0", "action": "ON"}'}).sync()
     msg = pubnub_bot.listener.message_queue.get(20)
@@ -337,7 +329,7 @@ def test_2(launcher, confdir, caplog, pubnub_bot):
     assert "Channel Jardin (0) ON" in caplog.text
 
 @pytest.mark.functional
-def test_3(launcher, confdir, pubnub_bot):
+def test_3(launcher, confdir, pubnub_bot, setenv):
     """ Send a new program and
     check that it is correctly take into account """
 

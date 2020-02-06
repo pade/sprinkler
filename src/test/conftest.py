@@ -7,6 +7,20 @@ import sys
 import tempfile
 import pytest
 import logging
+import env_file
+from pathlib import Path
+
+@pytest.fixture
+def setenv():
+    path = Path(os.path.dirname(os.path.abspath(__file__)))
+    file_to_load = Path(os.path.join(path.parent.parent, ".env"))
+    if file_to_load.is_file():
+        env_file.load(file_to_load)
+        # Now PUBKEY, SUBKEY and PUBNUBID are defined
+    else:
+        # .env not found, assuming anv variable are defined elsewhere
+        pass 
+    
 
 @pytest.fixture
 def confdir(request):
