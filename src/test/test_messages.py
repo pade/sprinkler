@@ -22,6 +22,7 @@ def pubnub_bot(setenv):
     pnconfig.publish_key = os.environ['PUBKEY']
     pnconfig.subscribe_timeout = 20
     pnconfig.uuid = "d301009f-f274-435d-b2bb-40735d944392"
+    pnconfig.ssl = True
 
     pubnub_bot = PubNub(pnconfig)
     
@@ -40,13 +41,13 @@ def test_receive(pubnub_bot, caplog, setenv):
     while msg_con.is_message():
         msg_con.get_message()
 
-    #pubnub.set_stream_logger('pubnub', logging.DEBUG)
-    pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": "Hello my friend :)!"}).sync()
+    pubnub.set_stream_logger('pubnub', logging.DEBUG)
+    pubnub_bot.publish().channel("sprinkler").message({"content": "Hello my friend :)!"}).sync()
 
     msg = msg_con.get_message(20)  # wait until message is received
     assert msg == "Hello my friend :)!", f"Received {msg}"
 
-    pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": '{"dummy": "data"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"dummy": "data"}'}).sync()
     msg = msg_con.get_message(10)  # wait until message is received
     assert msg == '{"dummy": "data"}', f"Received {msg}"
 

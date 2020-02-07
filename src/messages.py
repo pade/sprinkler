@@ -29,8 +29,8 @@ class Messages():
                 super().__init__()
 
             def message(self, pubnub, message):
-                if message.message['sender'] != pubnub.uuid:
-                    self._logger.debug(f"RECV from {message.message['sender']}: \
+                if message.publisher != pubnub.uuid:
+                    self._logger.debug(f"RECV from {message.publisher}: \
                         {message.message['content']}")
                     super().message(pubnub, message.message['content'])
 
@@ -43,6 +43,7 @@ class Messages():
         pnconfig.subscribe_key = subkey
         pnconfig.publish_key = pubkey
         pnconfig.uuid = id
+        pnconfig.ssl = True
         pnconfig.reconnect_policy = PNReconnectionPolicy.LINEAR
         pnconfig.subscribe_timeout = 20
         self.pubnub = PubNub(pnconfig)
@@ -53,7 +54,7 @@ class Messages():
     def send(self, msg):
         try:
             self.pubnub.publish().channel("sprinkler")\
-                .message({'sender': self.pubnub.uuid, 'content': msg}).sync()
+                .message({'content': msg}).sync()
             self._logger.debug(f"SEND from {self.pubnub.uuid}: {msg}")
         except PubNubException as e:
             self._logger.error("Sending error: " + str(e))

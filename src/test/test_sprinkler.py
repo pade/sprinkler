@@ -283,6 +283,7 @@ def pubnub_bot(setenv):
     pnconfig.publish_key = os.environ['PUBKEY']
     pnconfig.subscribe_timeout = 20
     pnconfig.uuid = "d301009f-f274-435d-b2bb-40735d944392"
+    pnconfig.ssl = True
     pubnub_bot = PubNub(pnconfig)
     listener = SubscribeListener()
     pubnub_bot.add_listener(listener)
@@ -303,12 +304,12 @@ def test_1(launcher, confdir, pubnub_bot, setenv):
     """ Test 'get program' command """
     logger = logging.getLogger('test')
     logger.setLevel(logging.DEBUG)
-    pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
     logger.info('SEND: {"command": "get program"}')
 
 
     msg = pubnub_bot.listener.message_queue.get(20)
-    if msg.message['sender'] == pubnub_bot.uuid:
+    if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
     
     json_msg = json.loads(msg.message['content'])
@@ -320,9 +321,9 @@ def test_1(launcher, confdir, pubnub_bot, setenv):
 @pytest.mark.functional
 def test_2(launcher, confdir, caplog, pubnub_bot, setenv):
     """ Test forced a channel ON """
-    pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": '{"command": "force channel", "nb": "0", "action": "ON"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "force channel", "nb": "0", "action": "ON"}'}).sync()
     msg = pubnub_bot.listener.message_queue.get(20)
-    if msg.message['sender'] == pubnub_bot.uuid:
+    if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
 
     assert (msg.message['content'] == '{"status": "OK"}')
@@ -333,29 +334,29 @@ def test_3(launcher, confdir, pubnub_bot, setenv):
     """ Send a new program and
     check that it is correctly take into account """
 
-    pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
     msg = pubnub_bot.listener.message_queue.get(20)
-    if msg.message['sender'] == pubnub_bot.uuid:
+    if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
     json_msg = json.loads(msg.message['content'])
 
     assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 5),\
         "Received message is: {}".format(msg.message['content'])
 
-    pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": '{{"command": "new program", "program": {}}}'.format(NEW_CHANNEL_DB)}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{{"command": "new program", "program": {}}}'.format(NEW_CHANNEL_DB)}).sync()
 
     msg = pubnub_bot.listener.message_queue.get(20)
-    if msg.message['sender'] == pubnub_bot.uuid:
+    if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
     json_msg = json.loads(msg.message['content'])
 
     assert (msg.message['content'] == '{"status": "OK"}'),\
         "Received message is: {}".format(msg.message['sender'])
 
-    pubnub_bot.publish().channel("sprinkler").message({"sender": pubnub_bot.uuid, "content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
 
     msg = pubnub_bot.listener.message_queue.get(20)
-    if msg.message['sender'] == pubnub_bot.uuid:
+    if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
     json_msg = json.loads(msg.message['content'])
 
