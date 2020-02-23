@@ -2,7 +2,7 @@
 
 import json
 
-command_list = ("get program", "force channel", "new program")
+command_list = ("get program", "force channel", "new program", "new channel")
 action_list = ("ON", "OFF", "AUTO")
 
 
@@ -30,7 +30,7 @@ class Parser(object):
                     raise ParserError("Unknown action '{}'"
                                       .format(action))
                 self.param = {'nb': nb, 'action': action}
-            elif self.command == "new program":
+            elif self.command == "new program" or self.command == "new channel":
                 program = json_msg['program']
                 self.param = {'program': program}
         except BaseException:

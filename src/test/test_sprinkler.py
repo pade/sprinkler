@@ -267,6 +267,38 @@ NEW_CHANNEL_DB = """
 }
 """
 
+UPDATE_CHANNEL = """
+{
+    "nb": 0,
+    "name": "Jardin",
+    "is_enable": true,
+    "progdays": [
+        {
+            "is_active": false,
+            "days": [false, false, false,
+                        false, false, false, false],
+            "stime":
+            {
+                "hour": 6,
+                "minute": 10,
+                "duration": 30
+            }
+        },
+        {
+            "is_active": false,
+            "days": [false, false, false,
+                        false, false, false, false],
+            "stime":
+            {
+                "hour": 0,
+                "minute": 0,
+                "duration": 0
+            }
+        }
+    ]
+}
+"""
+
 @pytest.fixture(scope='function')
 def launcher(confdir):
     app = MainApp(confdir, ['-d'])
@@ -344,6 +376,40 @@ def test_3(launcher, confdir, pubnub_bot, setenv):
         "Received message is: {}".format(msg.message['content'])
 
     pubnub_bot.publish().channel("sprinkler").message({"content": '{{"command": "new program", "program": {}}}'.format(NEW_CHANNEL_DB)}).sync()
+
+    msg = pubnub_bot.listener.message_queue.get(20)
+    if msg.publisher == pubnub_bot.uuid:
+        msg = pubnub_bot.listener.message_queue.get(20)
+    json_msg = json.loads(msg.message['content'])
+
+    assert (msg.message['content'] == '{"status": "OK"}'),\
+        "Received message is: {}".format(msg.message['sender'])
+
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
+
+    msg = pubnub_bot.listener.message_queue.get(20)
+    if msg.publisher == pubnub_bot.uuid:
+        msg = pubnub_bot.listener.message_queue.get(20)
+    json_msg = json.loads(msg.message['content'])
+
+    assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 6),\
+        "Received message is: {}".format(msg.message['content'])
+
+@pytest.mark.functional
+def test_4(launcher, confdir, pubnub_bot, setenv):
+    """ Send a new channel and
+    check that it is correctly take into account """
+
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
+    msg = pubnub_bot.listener.message_queue.get(20)
+    if msg.publisher == pubnub_bot.uuid:
+        msg = pubnub_bot.listener.message_queue.get(20)
+    json_msg = json.loads(msg.message['content'])
+
+    assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 5),\
+        "Received message is: {}".format(msg.message['content'])
+
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{{"command": "new channel", "program": {}}}'.format(UPDATE_CHANNEL)}).sync()
 
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:

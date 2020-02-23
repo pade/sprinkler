@@ -15,6 +15,7 @@ class Database():
         self.dbfile = dbfile
         self.iscached = False
         self.validator = Validate()
+        self.data = None
 
     def read(self):
         if not self.iscached:
@@ -28,8 +29,23 @@ class Database():
         self.iscached = False
         with open(self.dbfile, 'w') as fd:
             self.data = self.validator.validate_json(data)
-            fd.write(json.dumps(self.data))
+            fd.write(json.dumps(data))
             self.iscached = True
+
+    def update_channels(self, ch):
+        prog = self.read()
+        ch = self.validator.validate_channel(ch)
+        nb = ch['nb']
+        i = 0
+        for channel in prog["channels"]:
+            if channel["nb"] == nb:
+                prog["channels"][i] = ch
+                break
+            i +=1
+        self.write(prog)
+
+
+        
 
     def file_exists(self):
         return os.path.isfile(self.dbfile)

@@ -10,12 +10,12 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import cmdparser
 
 
-@pytest.fixture(params=['get program', 'force channel', 'new program'])
+@pytest.fixture(params=['get program', 'force channel', 'new program', 'new channel'])
 def cmd_list(request):
     command = '{{"command": "{}"'.format(request.param)
     if request.param == "force channel":
         command = command + ', "nb": "1", "action": "ON" }'
-    elif request.param == "new program":
+    elif request.param == "new program" or request.param == "new channel":
         command = command + ', "program": {"channel": "0"}}'
     else:
         command = command + "}"

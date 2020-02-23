@@ -295,11 +295,14 @@ class MainApp(object):
                                           .format(nb, action))
                         self.engine.channel_forced(nb, action)
                         self.messages.send('{"status": "OK"}')
-                    elif p.get_command() == 'new program':
+                    elif p.get_command() == 'new program' or p.get_command() == 'new channel':
                         program = p.get_param()['program']
                         self.logger.debug(
                             "Parameter: program={}".format(program))
-                        self._database.write(program)
+                        if p.get_command() == 'new program':
+                            self._database.write(program)
+                        else:
+                            self._database.update_channels(program)
                         upd = UpdateChannels(self._database)
                         ch_list = upd.channels()
                         self.engine.stop()
