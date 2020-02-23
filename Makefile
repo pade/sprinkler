@@ -45,4 +45,4 @@ help:
 	@echo "\t-pep8: Checking PEP8 coding style"
 	@echo "\t-autopep8: Applying PEP8 (code is modified...)\n"
 
-check: cov pep8
+check: test pep8
