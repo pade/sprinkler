@@ -353,7 +353,7 @@ def test_1(launcher, confdir, pubnub_bot, setenv):
 @pytest.mark.functional
 def test_2(launcher, confdir, caplog, pubnub_bot, setenv):
     """ Test forced a channel ON """
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "force channel", "nb": "0", "action": "ON"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "force channel", "nb": "0", "action": "ON", "duration": "1"}'}).sync()
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)

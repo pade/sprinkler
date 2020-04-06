@@ -6,6 +6,7 @@ import sys
 import os
 import time
 import pytest
+import logging
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -311,6 +312,8 @@ def test_forcedOnDuration(channel):
 @pytest.mark.functional
 def test_forcedOnDurationBoth(channel):
     """ Forced ch1 ON for 2 minutes and then for 1 minute """
+    logger = logging.getLogger('test')
+    logger.setLevel(logging.DEBUG)
     e = engine.Engine([channel.ch1])
     # Force time outside a running period
     e.get_datetime_now = MagicMock(

@@ -20,6 +20,7 @@ class Engine(object):
         self._statemachine = {}
         self.__savestartdate = {}
         self.__saveenddate = {}
+        self._currentstate = []
         for ch in self._channels:
             self._statemachine[ch.nb] = StateMachine()
             self._statemachine[ch.nb].register(
@@ -31,6 +32,7 @@ class Engine(object):
             self._statemachine[ch.nb].register(
                 "ManualOff", self._manual_off, [ch])
             self._statemachine[ch.nb].setState("NotRunning")
+            self._save_channel_state(ch.nb, "NotRunning")
 
         self._sched = Scheduler(self.run)
         self._logger = logging.getLogger('sprinkler')
@@ -53,11 +55,13 @@ class Engine(object):
             self._logger.info("Channel {} ({}) forced OFF"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOff")
+            self._save_channel_state(channel.nb, "ManualOff")
             self._statemachine[channel.nb].run()
         elif channel.manual == "AUTO":
             self._logger.info("Channel {} ({}) set in program mode"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("NotRunning")
+            self._save_channel_state(channel.nb, "NotRunning")
             self._statemachine[channel.nb].run()
 
     def _manual_off(self, channel):
@@ -67,11 +71,13 @@ class Engine(object):
             self._logger.info("Channel '{}' ({}) forced ON"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOn")
+            self._save_channel_state(channel.nb, "ManualOn")
             self._statemachine[channel.nb].run()
         elif channel.manual == "AUTO":
             self._logger.info("Channel '{}' ({}) set in program mode"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("NotRunning")
+            self._save_channel_state(channel.nb, "NotRunning")
             self._statemachine[channel.nb].run()
 
     def _running(self, channel):
@@ -80,11 +86,13 @@ class Engine(object):
             self._logger.info("Channel '{}' ({}) forced OFF"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOff")
+            self._save_channel_state(channel.nb, "ManualOff")
             self._statemachine[channel.nb].run()
         elif channel.manual == "ON":
             self._logger.info("Channel '{}' ({}) forced ON"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOn")
+            self._save_channel_state(channel.nb, "ManualOn")
             self._statemachine[channel.nb].run()
         else:
             channel_status = []
@@ -119,8 +127,10 @@ class Engine(object):
 
             if True in channel_status:
                 channel.running = True
+                self._save_channel_state(channel.nb, "Running")
             else:
                 self._statemachine[channel.nb].setState("NotRunning")
+                self._save_channel_state(channel.nb, "NotRunning")
                 self._statemachine[channel.nb].run()
                 channel.running = False
 
@@ -130,11 +140,13 @@ class Engine(object):
             self._logger.info("Channel {} ({}) forced OFF"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOff")
+            self._save_channel_state(channel.nb, "ManualOff")
             self._statemachine[channel.nb].run()
         elif channel.manual == "ON":
             self._logger.info("Channel {} ({}) forced ON"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOn")
+            self._save_channel_state(channel.nb, "ManualOn")
             self._statemachine[channel.nb].run()
         else:
             channel_status = []
@@ -163,6 +175,7 @@ class Engine(object):
 
             if True in channel_status:
                 self._statemachine[channel.nb].setState("Running")
+                self._save_channel_state(channel.nb, "Running")
                 # save start and end date to prevent false detection around
                 # midnight
                 self.__savestartdate[channel.nb] = start
@@ -171,6 +184,20 @@ class Engine(object):
                 self._statemachine[channel.nb].run()
             else:
                 channel.running = False
+                self._save_channel_state(channel.nb, "NotRunning")
+
+    def get_current_state(self):
+        return self._currentstate
+
+    def _save_channel_state(self, channelnb, state):
+        for index, elem in enumerate(self._currentstate):
+            if elem['nb'] == channelnb:
+                # replace current value
+                self._currentstate[index] = {'nb': channelnb, 'state': state}
+                # stop the function
+                return
+        # if no previous element is found
+        self._currentstate.append({'nb': channelnb, 'state': state})
 
     def stop(self):
         """ Stop running engine """
@@ -190,6 +217,7 @@ class Engine(object):
                 if action in ("OFF", "AUTO"):
                     self._logger.info("Channel {} forced to {}"
                                        .format(nb, action))
+                    self._timer.clear()
                     ch.manual = action
                 elif action == "ON" and duration != 0:
                     self._logger.info("Channel {} forced to ON for {} minutes"
