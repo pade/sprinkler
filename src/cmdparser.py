@@ -26,10 +26,11 @@ class Parser(object):
             elif self.command == "force channel":
                 nb = int(json_msg['nb'])
                 action = json_msg['action']
+                duration = json_msg.get('duration', 0)
                 if action not in action_list:
                     raise ParserError("Unknown action '{}'"
                                       .format(action))
-                self.param = {'nb': nb, 'action': action}
+                self.param = {'nb': nb, 'action': action, 'duration': duration}
             elif self.command == "new program" or self.command == "new channel":
                 program = json_msg['program']
                 self.param = {'program': program}

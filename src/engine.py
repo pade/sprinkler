@@ -5,6 +5,7 @@ from scheduler import Scheduler
 from state import StateMachine
 import datetime
 import logging
+import timer
 
 
 class Engine(object):
@@ -33,6 +34,9 @@ class Engine(object):
 
         self._sched = Scheduler(self.run)
         self._logger = logging.getLogger('sprinkler')
+        self._timer = timer.Timer()
+        self._timer.start()
+
 
     def get_datetime_now(self):
         return datetime.datetime.now()
@@ -71,7 +75,7 @@ class Engine(object):
             self._statemachine[channel.nb].run()
 
     def _running(self, channel):
-        """ Whenn channel is running """
+        """ When channel is running """
         if channel.manual == "OFF":
             self._logger.info("Channel '{}' ({}) forced OFF"
                               .format(channel.name, channel.nb))
@@ -169,22 +173,37 @@ class Engine(object):
                 channel.running = False
 
     def stop(self):
-        """ Stop running engine
-        """
+        """ Stop running engine """
+        self._timer.stop()
         self._sched.stop()
-        while self._sched.is_alive():
+        while self._timer.is_alive() or self._sched.is_alive():
             pass
 
-    def channel_forced(self, nb, action):
+    def channel_forced(self, nb, action, duration=0):
         """ Set channel action
         @param nb: channel number
         @param action: channel action. "ON", "OFF", "AUTO"
+        @param duration: when action is ON, the duration in minutes of the sprinkler
         """
-
         for ch in self._channels:
             if nb == ch.nb:
-                if action in ("ON", "OFF", "AUTO"):
-                    self._logger.debug("Channel {} forced to {}"
+                if action in ("OFF", "AUTO"):
+                    self._logger.info("Channel {} forced to {}"
                                        .format(nb, action))
                     ch.manual = action
-                    self.run()
+                elif action == "ON" and duration != 0:
+                    self._logger.info("Channel {} forced to ON for {} minutes"
+                                    .format(nb, duration))
+                    # Remove all already forced sprinkler
+                    self._timer.clear()
+                    self._timer.program(duration, self._stop_ch_after_delay, argument=(nb,))
+                    ch.manual = "ON"
+                self.run()
+
+    def _stop_ch_after_delay(self, nb):
+        """ Callback called to switch channel ch to AUTO after a delay """
+        for ch in self._channels:
+            if nb == ch.nb:
+                ch.manual = "AUTO"
+                self.run()
+

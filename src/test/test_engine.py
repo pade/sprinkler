@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import MagicMock
 import sys
 import os
+import time
 import pytest
 
 # Set parent directory in path, to be able to import module
@@ -57,7 +58,6 @@ def test_1(channel):
     e = engine.Engine([channel.ch1])
     # Stop scheduler, not used here
     e.stop()
-
     e.run()
 
     assert(not channel.hw1.cmd)
@@ -268,7 +268,7 @@ def test_forcedOn_2(channel):
     e.run()
     assert(not channel.hw1.cmd)
 
-    e.channel_forced(0, "ON")
+    e.channel_forced(0, "ON", 0.1)
     assert(channel.hw1.cmd)
 
     e.channel_forced(0, "AUTO")
@@ -291,3 +291,34 @@ def test_forcedOff_2(channel):
 
     e.channel_forced(0, "AUTO")
     assert(channel.hw1.cmd)
+
+@pytest.mark.longtest
+@pytest.mark.functional
+def test_forcedOnDuration(channel):
+    """ Forced ch1 ON for 2 minutes """
+    e = engine.Engine([channel.ch1])
+    # Force time outside a running period
+    e.get_datetime_now = MagicMock(
+        return_value=datetime(2017, 6, 23, 5, 45))
+
+    e.channel_forced(0, "ON", 2)
+    assert(channel.hw1.cmd)
+    time.sleep(3*60)
+    assert(not channel.hw1.cmd)
+    e.stop()
+
+@pytest.mark.longtest
+@pytest.mark.functional
+def test_forcedOnDurationBoth(channel):
+    """ Forced ch1 ON for 2 minutes and then for 1 minute """
+    e = engine.Engine([channel.ch1])
+    # Force time outside a running period
+    e.get_datetime_now = MagicMock(
+        return_value=datetime(2017, 6, 23, 5, 45))
+
+    e.channel_forced(0, "ON", 2)
+    assert(channel.hw1.cmd)
+    e.channel_forced(0, "ON", 1)
+    time.sleep(60+10)
+    assert(not channel.hw1.cmd)
+    e.stop()

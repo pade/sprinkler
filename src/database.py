@@ -44,8 +44,5 @@ class Database():
             i +=1
         self.write(prog)
 
-
-        
-
     def file_exists(self):
         return os.path.isfile(self.dbfile)

@@ -291,9 +291,10 @@ class MainApp(object):
                     elif p.get_command() == 'force channel':
                         nb = p.get_param()['nb']
                         action = p.get_param()['action']
-                        self.logger.debug("Parameters: nb={}, action={}"
-                                          .format(nb, action))
-                        self.engine.channel_forced(nb, action)
+                        duration = p.get_param()['duration']
+                        self.logger.debug("Parameters: nb={}, action={}, duration={}"
+                                          .format(nb, action, duration))
+                        self.engine.channel_forced(nb, action, duration)
                         self.messages.send('{"status": "OK"}')
                     elif p.get_command() == 'new program' or p.get_command() == 'new channel':
                         program = p.get_param()['program']
