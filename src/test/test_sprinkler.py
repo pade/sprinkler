@@ -299,7 +299,7 @@ UPDATE_CHANNEL = """
 }
 """
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def launcher(confdir):
     app = MainApp(confdir, ['-d'])
     app_th = Thread(target=app.run)
