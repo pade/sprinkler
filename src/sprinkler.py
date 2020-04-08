@@ -167,10 +167,6 @@ class MainApp(object):
         sys.exit()
 
     def stop_all(self):
-        if self.engine is not None:
-            self.engine.stop()
-        if self.messages is not None:
-            self.messages.stop()
         self.stop = True
 
     def __init__(self, confdir, *argv):
@@ -313,7 +309,10 @@ class MainApp(object):
                 except BaseException:
                     self.logger.warning("Received unknown message: {}"
                                         .format(msg))
-
+        if self.engine is not None:
+            self.engine.stop()
+        if self.messages is not None:
+            self.messages.stop()
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY, sys.argv[1:])
