@@ -26,7 +26,7 @@ class Parser(object):
             elif self.command == "force channel":
                 nb = int(json_msg['nb'])
                 action = json_msg['action']
-                duration = json_msg.get('duration', 0)
+                duration = int(json_msg.get('duration', 0))
                 if action not in action_list:
                     raise ParserError("Unknown action '{}'"
                                       .format(action))
