@@ -61,7 +61,11 @@ class Messages():
 
     def stop(self):
         self.pubnub.unsubscribe().channels('sprinkler').execute()
-        #self.message_listener.wait_for_disconnect()
+        try:
+            self.message_listener.wait_for_disconnect()
+        except:
+            # Already disconnected
+            pass
         self.pubnub.stop()
 
     def get_message(self, timeout=None):
