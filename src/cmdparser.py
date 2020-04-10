@@ -2,7 +2,7 @@
 
 import json
 
-command_list = ("get program", "force channel", "new program", "new channel")
+command_list = ("get program", "force channel", "new program", "new channel", "get channels state")
 action_list = ("ON", "OFF", "AUTO")
 
 
