@@ -7,6 +7,7 @@ import os
 import time
 import pytest
 import logging
+from datetime import datetime, timedelta
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -51,6 +52,11 @@ class ChannelInit():
 def channel():
     return ChannelInit()
 
+@pytest.fixture
+def eng(channel):
+    e = engine.Engine([channel.ch1, channel.ch2])
+    yield e
+    e.stop()
 
 def test_1(channel):
     """When channel is not enable, do nothing"""
@@ -295,33 +301,63 @@ def test_forcedOff_2(channel):
 
 @pytest.mark.longtest
 @pytest.mark.functional
-def test_forcedOnDuration(channel):
+def test_forcedOnDuration(channel, eng):
     """ Forced ch1 ON for 2 minutes """
-    e = engine.Engine([channel.ch1])
     # Force time outside a running period
-    e.get_datetime_now = MagicMock(
+    eng.get_datetime_now = MagicMock(
         return_value=datetime(2017, 6, 23, 5, 45))
 
-    e.channel_forced(0, "ON", 2)
+    eng.channel_forced(0, "ON", 2)
     assert(channel.hw1.cmd)
-    time.sleep(3*60)
+    starttime = datetime.now()
+    while (datetime.now() < starttime + timedelta(minutes=3)) or channel.hw1.cmd:
+        pass
     assert(not channel.hw1.cmd)
-    e.stop()
+    
 
 @pytest.mark.longtest
-@pytest.mark.functional
-def test_forcedOnDurationBoth(channel):
+def test_forcedOnDurationBoth(channel, eng):
     """ Forced ch1 ON for 2 minutes and then for 1 minute """
-    logger = logging.getLogger('test')
-    logger.setLevel(logging.DEBUG)
-    e = engine.Engine([channel.ch1])
     # Force time outside a running period
-    e.get_datetime_now = MagicMock(
+    eng.get_datetime_now = MagicMock(
         return_value=datetime(2017, 6, 23, 5, 45))
 
-    e.channel_forced(0, "ON", 2)
+    eng.channel_forced(0, "ON", 2)
     assert(channel.hw1.cmd)
-    e.channel_forced(0, "ON", 1)
-    time.sleep(60+10)
+    eng.channel_forced(0, "ON", 1)
+    starttime = datetime.now()
+    while (datetime.now() < starttime + timedelta(minutes=2)) or channel.hw1.cmd:
+        pass
     assert(not channel.hw1.cmd)
-    e.stop()
+    
+
+@pytest.mark.longtest
+def test_forceOnChannelIndependancy(channel, eng):
+    """ Force ON, ch1 and ch2, force ch1 OFF and check that ch2 still ON """
+    channel.ch2.isenable = True
+
+    # Force time outside a running period
+    eng.get_datetime_now = MagicMock(
+        return_value=datetime(2017, 6, 23, 5, 45))
+    eng.channel_forced(0, "ON", 2)
+    assert(channel.hw1.cmd)
+    eng.channel_forced(1, "ON", 2)
+    assert(channel.hw2.cmd)
+    eng.channel_forced(0, "OFF")
+    assert(not channel.hw1.cmd)
+    assert(channel.hw2.cmd)
+    
+def test_ChannelState(channel, eng):
+    """ Check channelstatus return"""
+    channel.ch2.isenable = True
+
+    # Force time into a running period
+    eng.get_datetime_now = MagicMock(
+        return_value=datetime(2017, 6, 23, 5, 15))
+    eng.channel_forced(0, "ON", 2)
+    status = eng.get_channel_state()
+    for s in status:
+        if s['nb'] == 0:
+            assert(s['state']  == 'ManualOn' and s['duration'] == 2)
+        if s['nb'] == 1:
+            assert(s['state'] == "NotRunning")
