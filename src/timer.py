@@ -15,7 +15,8 @@ class Timer(threading.Thread):
 
     def run(self):
         while(not self._stoptimer):
-            self._sched.run()
+            self._sched.run(blocking=False)
+            time.sleep(5)
 
     def clear(self):
         # remove all pending timer

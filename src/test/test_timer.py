@@ -5,6 +5,8 @@ import sys
 import time
 import pytest
 from datetime import datetime, timedelta
+import time
+
 import logging
 
 # Set parent directory in path, to be able to import module
@@ -51,9 +53,26 @@ def test_ClearTimer():
     t.program(2.0/60.0, action)
     t.start()
     t.clear()
-    starttime = datetime.now()
-    while(datetime.now() < starttime + timedelta(seconds=5)):
-        pass
+    time.sleep(5)
     t.stop()
     assert(nb_call == 0)
 
+def test_AddAndRemoveTimer():
+    actionReached = [False, False]
+
+    def action(nb):
+        nonlocal actionReached
+        actionReached[nb] = True
+
+    t = timer.Timer()
+    t.program(2.0/60.0, action, argument=(0,))
+    t.start()
+    t.clear()
+    t.program(1.0/60.0, action, argument=(1,))
+    time.sleep(5)
+    t.stop()
+    assert(actionReached[0] == False and actionReached[1] == True)
+
+
+
+    
