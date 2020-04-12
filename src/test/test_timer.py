@@ -17,10 +17,10 @@ import timer
 def test_TimerSecond():
     def action(start):
         t.stop()
-        assert(int(time.time())-start == 6.0)
+        assert((int(time.time())-start > 5.9) and (int(time.time())-start < 6.1))
 
     t = timer.Timer()
-    t.program(0.1, action, argument=(int(time.time()),))
+    t.program(1.0/60, action, argument=(int(time.time()),))
     t.start()
 
 def test_SeveralTimer():
