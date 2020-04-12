@@ -70,7 +70,7 @@ class Messages():
 
     def get_message(self, timeout=None):
         try:
-            return self.messages.get(timeout=timeout)
+            return self.messages.get(block=(timeout is not None), timeout=timeout)
         except Empty:
             return None
 
