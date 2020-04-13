@@ -167,10 +167,6 @@ class MainApp(object):
         sys.exit()
 
     def stop_all(self):
-        if self.engine is not None:
-            self.engine.stop()
-        if self.messages is not None:
-            self.messages.stop()
         self.stop = True
 
     def __init__(self, confdir, *argv):
@@ -283,23 +279,21 @@ class MainApp(object):
                 msg = self.messages.get_message()
                 try:
                     p = cmdparser.Parser(msg)
-                    self.logger.debug("Received command '{}'"
-                                      .format(p.get_command()))
                     if p.get_command() == 'get program':
+                        self.logger.info("Received command 'get program'")
                         data = self._database.read()
                         self.messages.send(json.dumps(data))
                     elif p.get_command() == 'force channel':
                         nb = p.get_param()['nb']
                         action = p.get_param()['action']
                         duration = p.get_param()['duration']
-                        self.logger.debug("Parameters: nb={}, action={}, duration={}"
+                        self.logger.info("Received command 'force channel' nb={}, action={}, duration={}"
                                           .format(nb, action, duration))
                         self.engine.channel_forced(nb, action, duration)
                         self.messages.send('{"status": "OK"}')
                     elif p.get_command() == 'new program' or p.get_command() == 'new channel':
                         program = p.get_param()['program']
-                        self.logger.debug(
-                            "Parameter: program={}".format(program))
+                        self.logger.info("Received command '{} program={}".format(p.get_command(), program))
                         if p.get_command() == 'new program':
                             self._database.write(program)
                         else:
@@ -309,11 +303,16 @@ class MainApp(object):
                         self.engine.stop()
                         self.engine = Engine(ch_list)
                         self.messages.send('{"status": "OK"}')
+                    elif p.get_command() == 'get channels state':
+                        self.messages.send(json.dumps(self.engine.get_channel_state()))
 
                 except BaseException:
                     self.logger.warning("Received unknown message: {}"
                                         .format(msg))
-
+        if self.engine is not None:
+            self.engine.stop()
+        if self.messages is not None:
+            self.messages.stop()
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY, sys.argv[1:])

@@ -21,6 +21,7 @@ class Engine(object):
         self.__savestartdate = {}
         self.__saveenddate = {}
         self._currentstate = []
+        self._timer = {}
         for ch in self._channels:
             self._statemachine[ch.nb] = StateMachine()
             self._statemachine[ch.nb].register(
@@ -33,11 +34,11 @@ class Engine(object):
                 "ManualOff", self._manual_off, [ch])
             self._statemachine[ch.nb].setState("NotRunning")
             self._save_channel_state(ch.nb, "NotRunning")
+            self._timer[ch.nb] = timer.Timer()
+            self._timer[ch.nb].start()
 
         self._sched = Scheduler(self.run)
         self._logger = logging.getLogger('sprinkler')
-        self._timer = timer.Timer()
-        self._timer.start()
 
 
     def get_datetime_now(self):
@@ -71,7 +72,6 @@ class Engine(object):
             self._logger.info("Channel '{}' ({}) forced ON"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOn")
-            self._save_channel_state(channel.nb, "ManualOn")
             self._statemachine[channel.nb].run()
         elif channel.manual == "AUTO":
             self._logger.info("Channel '{}' ({}) set in program mode"
@@ -92,7 +92,6 @@ class Engine(object):
             self._logger.info("Channel '{}' ({}) forced ON"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOn")
-            self._save_channel_state(channel.nb, "ManualOn")
             self._statemachine[channel.nb].run()
         else:
             channel_status = []
@@ -146,7 +145,6 @@ class Engine(object):
             self._logger.info("Channel {} ({}) forced ON"
                               .format(channel.name, channel.nb))
             self._statemachine[channel.nb].setState("ManualOn")
-            self._save_channel_state(channel.nb, "ManualOn")
             self._statemachine[channel.nb].run()
         else:
             channel_status = []
@@ -189,22 +187,29 @@ class Engine(object):
     def get_current_state(self):
         return self._currentstate
 
-    def _save_channel_state(self, channelnb, state):
+    def _save_channel_state(self, channelnb, state, duration=0):
         for index, elem in enumerate(self._currentstate):
             if elem['nb'] == channelnb:
                 # replace current value
-                self._currentstate[index] = {'nb': channelnb, 'state': state}
+                if state == "ManualOn":
+                    self._currentstate[index] = {'nb': channelnb, 'state': state, 'duration': duration}
+                else:
+                    self._currentstate[index] = {'nb': channelnb, 'state': state}
                 # stop the function
                 return
         # if no previous element is found
-        self._currentstate.append({'nb': channelnb, 'state': state})
+        if state == "ManualOn":
+            self._currentstate.append({'nb': channelnb, 'state': state, 'duration': duration})
+        else:
+            self._currentstate.append({'nb': channelnb, 'state': state})
 
     def stop(self):
         """ Stop running engine """
-        self._timer.stop()
+        for key in self._timer.keys():
+            self._timer[key].stop()
         self._sched.stop()
-        while self._timer.is_alive() or self._sched.is_alive():
-            pass
+        for key in self._timer.keys():
+            self._timer[key].join()
 
     def channel_forced(self, nb, action, duration=0):
         """ Set channel action
@@ -215,23 +220,27 @@ class Engine(object):
         for ch in self._channels:
             if nb == ch.nb:
                 if action in ("OFF", "AUTO"):
-                    self._logger.info("Channel {} forced to {}"
-                                       .format(nb, action))
-                    self._timer.clear()
+                    self._logger.info(f"Channel {ch.name} ({ch.nb}) forced to {action}")
+                    self._timer[ch.nb].clear()
                     ch.manual = action
                 elif action == "ON" and duration != 0:
-                    self._logger.info("Channel {} forced to ON for {} minutes"
-                                    .format(nb, duration))
+                    self._logger.info(f"Channel {ch.name} ({ch.nb}) forced to ON for {duration} minutes")
+                    self._save_channel_state(nb, "ManualOn", duration)
                     # Remove all already forced sprinkler
-                    self._timer.clear()
-                    self._timer.program(duration, self._stop_ch_after_delay, argument=(nb,))
+                    self._timer[ch.nb].clear()
+                    self._timer[ch.nb].program(duration, self._stop_ch_after_delay, argument=(ch.nb,))
                     ch.manual = "ON"
                 self.run()
 
     def _stop_ch_after_delay(self, nb):
         """ Callback called to switch channel ch to AUTO after a delay """
+        import datetime
+        self._logger.info(f"Channel n°{nb}: end of forced ON")
         for ch in self._channels:
             if nb == ch.nb:
                 ch.manual = "AUTO"
                 self.run()
+
+    def get_channel_state(self):
+        return self._currentstate
 
