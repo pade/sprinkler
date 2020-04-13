@@ -10,8 +10,7 @@ Group=pi
 UMask=007
 WorkingDirectory=/home/pi/sprinkler
 
-EnvironmentFile=/home/pi/args.conf
-ExecStart=pipenv run python src/sprinkler.py $DEBUG
+ExecStart=pipenv run python src/sprinkler.py
  
 Restart=on-failure
  
