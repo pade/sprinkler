@@ -10,7 +10,7 @@ Group=pi
 UMask=007
 WorkingDirectory=/home/pi/sprinkler
 
-ExecStart=pipenv run python src/sprinkler.py
+ExecStart=pipenv run python src/sprinkler.py $SPRINKLER_DEBUG
  
 Restart=on-failure
  
