@@ -128,6 +128,7 @@ class Engine(object):
                 channel.running = True
                 self._save_channel_state(channel.nb, "Running")
             else:
+                self._logger.info(f"Channel '{channel.name}' ({channel.nb}) is now OFF")
                 self._statemachine[channel.nb].setState("NotRunning")
                 self._save_channel_state(channel.nb, "NotRunning")
                 self._statemachine[channel.nb].run()
@@ -172,6 +173,7 @@ class Engine(object):
                             channel_status.append(start <= now and end > now)
 
             if True in channel_status:
+                self._logger.info(f"Channel '{channel.name}' ({channel.nb}) is now ON ")
                 self._statemachine[channel.nb].setState("Running")
                 self._save_channel_state(channel.nb, "Running")
                 # save start and end date to prevent false detection around
