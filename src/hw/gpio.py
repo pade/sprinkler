@@ -52,7 +52,6 @@ class RaspberryGpio(BaseGpio):
     GPIO management for Raspberry
     '''
     def __init__(self, pConfig="raspberry.conf"):
-        try:
         GPIO.setmode(GPIO.BOARD)
         self.__channel = {}
         with open(pConfig, "r") as fd:
