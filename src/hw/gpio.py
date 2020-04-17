@@ -67,9 +67,12 @@ class RaspberryGpio(BaseGpio):
         for l in file_content:
             if l.startswith('#'):
                 continue
+            if ':' not in l:
+                # Ignore invalid lines
+                continue
             chnb, pinnb = l.split(":")
             self.__channel[int(chnb)] = int(pinnb)
-            GPIO.setup(pinnb, GPIO.OUT)
+            GPIO.setup(int(pinnb), GPIO.OUT)
 
         super(RaspberryGpio, self).__init__(pConfig)
 
