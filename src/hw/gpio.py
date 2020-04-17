@@ -6,25 +6,27 @@ Created on 30 août 2016
 '''
 
 import logging
+import os
 
-try:
-    import RPi.GPIO as GPIO
-except:
-    # RPi.GPIO not installed: we are not running on a Raspberry
-    # Simulate GPIO
-    class GPIO():
-        OUT = None
-        BOARD = None
-        def setmode(self, mode):
-            pass
+class DummyGPIO():
+    OUT = None
+    BOARD = None
+    def __init__(self):
+        self.__channel = {}
 
-        def setup(self, pinnb, mode):
-            pass
+    def setmode(self, mode):
+        pass
 
-        def output(self, pinnb, value):
-            pass
+    def setup(self, pinnb, mode):
+        self.__channel[pinnb] = False
 
-        def input(self, pinnb):
+    def output(self, pinnb, value):
+        self.__channel[pinnb] = value
+
+    def input(self, pinnb):
+        try:
+            return self.__channel[pinnb]
+        except KeyError:
             return False
 
 class BaseGpio(object):
@@ -51,16 +53,23 @@ class RaspberryGpio(BaseGpio):
     '''
     GPIO management for Raspberry
     '''
-    def __init__(self, pConfig="raspberry.conf"):
+    def __init__(self, pConfig=os.path.join(os.path.dirname(os.path.abspath(__file__)), "raspberry.conf")):
+        try:
+            import RPi.GPIO as GPIO
+        except:
+            # RPi.GPIO not installed: we are not running on a Raspberry
+            # Simulate GPIO
+            GPIO = DummyGPIO()
         GPIO.setmode(GPIO.BOARD)
         self.__channel = {}
         with open(pConfig, "r") as fd:
-            for l in fd.readline():
-                if l.startswith("#"):
-                    continue
-                chnb, pinnb = l.split(":")
-                self.__channel[int(chnb)] = int(pinnb)
-                GPIO.setup(pinnb, GPIO.OUT)
+           file_content = fd.readlines()
+        for l in file_content:
+            if l.startswith('#'):
+                continue
+            chnb, pinnb = l.split(":")
+            self.__channel[int(chnb)] = int(pinnb)
+            GPIO.setup(pinnb, GPIO.OUT)
 
         super(RaspberryGpio, self).__init__(pConfig)
 
