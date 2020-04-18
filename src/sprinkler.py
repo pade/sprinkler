@@ -162,7 +162,13 @@ class MainApp(object):
         '''
         Safe exit: stop all thread before exiting
         '''
-        self.logger.info("Terminated by user (SIGINT)")
+        if signal_nb == 15:
+            sig = "SIGTERM"
+        elif signal_nb == 2:
+            sig = "SIGINT"
+        else:
+            sig = "OTHER SIGNAL"
+        self.logger.info(f"Terminated by user ({sig})")
         self.stop_all()
         sys.exit()
 
