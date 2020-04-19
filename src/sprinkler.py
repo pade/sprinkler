@@ -310,7 +310,7 @@ class MainApp(object):
                         self.engine = Engine(ch_list)
                         self.messages.send('{"status": "OK"}')
                     elif p.get_command() == 'get channels state':
-                        self.messages.send(json.dumps(self.engine.get_channel_state()))
+                        self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
 
                 except BaseException:
                     self.logger.warning(f"Received unknown message: {msg}", exc_info=True)
