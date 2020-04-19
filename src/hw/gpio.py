@@ -5,6 +5,7 @@ Created on 30 août 2016
 @author: dassierp
 '''
 
+import logging
 
 class BaseGpio(object):
     '''
@@ -17,6 +18,7 @@ class BaseGpio(object):
         @param pConfig: HW configuration parameter
         '''
         self.hwcfg = pConfig
+        self._log = logging.getLogger()
 
     def write(self, pchannel, pvalue):
         raise NotImplementedError
@@ -25,15 +27,3 @@ class BaseGpio(object):
         raise NotImplementedError
 
 
-class RaspberryGpio(BaseGpio):
-    '''
-    GPIO management for Raspberry
-    '''
-    def __init__(self, pConfig=None):
-        super(RaspberryGpio, self).__init__(pConfig)
-
-    def write(self, pchannel, pvalue):
-        pass
-
-    def read(self, pchannel):
-        pass

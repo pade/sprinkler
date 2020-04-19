@@ -5,8 +5,10 @@ from progdays import Progdays
 from stime import STime
 from jsonvalidate import Validate
 import json
-from hw.gpio import RaspberryGpio
-
+try:
+    from hw.raspberry import RaspberryGpio as Gpio
+except:
+    from hw.dummy import DummyGpio as Gpio
 
 class UpdateChannels():
     """ Create Channels from database definition """
@@ -16,6 +18,7 @@ class UpdateChannels():
         @param database: Database class instance to access to DB
         """
         self._db = database.read()
+        self._gpio = Gpio()
 
     def channels(self):
         """ Create new Channel object according to database
@@ -25,7 +28,7 @@ class UpdateChannels():
         for channel in self._db["channels"]:
             ch = Channel(pName=channel["name"],
                          pChNumber=channel["nb"],
-                         pHwInterface=RaspberryGpio())
+                         pHwInterface=self._gpio)
             ch.isenable = channel["is_enable"]
             ch.progs = self._progdays(channel["progdays"])
             ch_list.append(ch)

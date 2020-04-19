@@ -69,7 +69,7 @@ def test_AddAndRemoveTimer():
     t.start()
     t.clear()
     t.program(1.0/60.0, action, argument=(1,))
-    time.sleep(5)
+    time.sleep(10)
     t.stop()
     assert(actionReached[0] == False and actionReached[1] == True)
 

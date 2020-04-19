@@ -307,8 +307,7 @@ class MainApp(object):
                         self.messages.send(json.dumps(self.engine.get_channel_state()))
 
                 except BaseException:
-                    self.logger.warning("Received unknown message: {}"
-                                        .format(msg))
+                    self.logger.warning(f"Received unknown message: {msg}", exc_info=True)
         if self.engine is not None:
             self.engine.stop()
         if self.messages is not None:
