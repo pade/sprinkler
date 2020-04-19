@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import json
+import logging
 
 command_list = ("get program", "force channel", "new program", "new channel", "get channels state")
 action_list = ("ON", "OFF", "AUTO")
@@ -13,6 +14,8 @@ class Parser(object):
         self.message = msg
         self.command = None
         self.param = {}
+        self.log = logging.getLogger()
+
         self._parse()
 
     def _parse(self):
@@ -31,9 +34,13 @@ class Parser(object):
                     raise ParserError("Unknown action '{}'"
                                       .format(action))
                 self.param = {'nb': nb, 'action': action, 'duration': duration}
+                self.log.info(f"Received command '{self.command}' [nb={self.param['nb']}, action={self.param['action']}, duration={self.param['duration']}]")
             elif self.command == "new program" or self.command == "new channel":
                 program = json_msg['program']
                 self.param = {'program': program}
+                self.log.info(f"Received command '{self.command}' [program={self.param['program']}]")
+            else:
+                self.log.info(f"Received command '{self.command}'")
         except BaseException:
             raise ParserError(self.message)
 
