@@ -6,6 +6,7 @@ from state import StateMachine
 import datetime
 import logging
 import timer
+import threading
 
 
 class Engine(object):
@@ -29,13 +30,17 @@ class Engine(object):
             self._statemachine[ch.nb].register("ManualOn", self._manual_on, [ch])
             self._statemachine[ch.nb].register("ManualOff", self._manual_off, [ch])
             self._statemachine[ch.nb].setState("NotRunning")
-            self._save_channel_state(ch.nb, "NotRunning")
+            self._currentstate.append({'nb': ch.nb, 'state': "NotRunning"})
             self._timer[ch.nb] = timer.Timer()
             self._timer[ch.nb].start()
 
+        self._oldstate = self._currentstate
         self._sched = Scheduler(self.run)
         self._logger = logging.getLogger('sprinkler')
+        self._event_new_state = threading.Event()
 
+    def get_event_new_state(self):
+        return self._event_new_state
 
     def get_datetime_now(self):
         return datetime.datetime.now()
@@ -170,6 +175,10 @@ class Engine(object):
             self._currentstate.append({'nb': channelnb, 'state': state, 'duration': duration})
         else:
             self._currentstate.append({'nb': channelnb, 'state': state})
+        # Notify if there is some change
+        if self._currentstate != self._oldstate:
+            self._event_new_state.set()
+
 
     def stop(self):
         """ Stop running engine """

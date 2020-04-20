@@ -22,6 +22,8 @@ import signal
 import json
 import cmdparser
 from uuid import uuid4
+import threading
+import time
 
 
 __VERSION__ = "1.0.0"
@@ -174,6 +176,8 @@ class MainApp(object):
 
     def stop_all(self):
         self.stop = True
+        # Wait 8 second to finish thread
+        time.sleep(8)
 
     def __init__(self, confdir, *argv):
         '''
@@ -262,6 +266,14 @@ class MainApp(object):
         filehandler.setFormatter(formatter)
         self.logger.addHandler(filehandler)
 
+    def send_channel_state(self):
+        ev = self.engine.get_event_new_state()
+        while not self.stop:
+            if ev.is_set():
+                self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
+                ev.clear()
+            ev.wait(2)
+
     def run(self):
         '''
         Main program
@@ -274,6 +286,9 @@ class MainApp(object):
             self.messages = Messages(subkey=self.config['messages']['pubnub_subkey'],
                                      pubkey=self.config['messages']['pubnub_pubkey'],
                                      id=self.config['messages']['id'])
+
+            self.th_msg = threading.Thread(target=self.send_channel_state)
+
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
             self.stop_all()

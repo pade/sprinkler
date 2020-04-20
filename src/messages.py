@@ -60,12 +60,12 @@ class Messages():
             self._logger.error("Sending error: " + str(e))
 
     def stop(self):
-        self.pubnub.unsubscribe().channels('sprinkler').execute()
-        try:
-            self.message_listener.wait_for_disconnect()
-        except:
+        #self.pubnub.unsubscribe().channels('sprinkler').execute()
+        #try:
+        #    self.message_listener.wait_for_disconnect()
+        #except:
             # Already disconnected
-            pass
+        #    pass
         self.pubnub.stop()
 
     def get_message(self, timeout=None):
