@@ -7,6 +7,7 @@ import datetime
 import logging
 import timer
 import threading
+import waitevents
 
 
 class Engine(object):
@@ -34,10 +35,10 @@ class Engine(object):
             self._timer[ch.nb] = timer.Timer()
             self._timer[ch.nb].start()
 
-        self._oldstate = self._currentstate
+        self._oldstate = self._currentstate.copy()
         self._sched = Scheduler(self.run)
         self._logger = logging.getLogger('sprinkler')
-        self._event_new_state = threading.Event()
+        self._event_new_state = waitevents.WaitableEvent()
 
     def get_event_new_state(self):
         return self._event_new_state
@@ -161,6 +162,7 @@ class Engine(object):
         return self._currentstate
 
     def _save_channel_state(self, channelnb, state, duration=0):
+        found = False
         for index, elem in enumerate(self._currentstate):
             if elem['nb'] == channelnb:
                 # replace current value
@@ -169,15 +171,18 @@ class Engine(object):
                 else:
                     self._currentstate[index] = {'nb': channelnb, 'state': state}
                 # stop the function
-                return
+                found = True
+                break
         # if no previous element is found
-        if state == "ManualOn":
-            self._currentstate.append({'nb': channelnb, 'state': state, 'duration': duration})
-        else:
-            self._currentstate.append({'nb': channelnb, 'state': state})
+        if not found:
+            if state == "ManualOn":
+                self._currentstate.append({'nb': channelnb, 'state': state, 'duration': duration})
+            else:
+                self._currentstate.append({'nb': channelnb, 'state': state})
         # Notify if there is some change
         if self._currentstate != self._oldstate:
             self._event_new_state.set()
+            self._oldstate = self._currentstate.copy()
 
 
     def stop(self):

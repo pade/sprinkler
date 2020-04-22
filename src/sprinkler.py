@@ -6,7 +6,6 @@ Created on 9 sept. 2016
 @author: dassierp
 '''
 
-
 from update_channels import UpdateChannels
 from engine import Engine
 from messages import Messages
@@ -24,7 +23,8 @@ import cmdparser
 from uuid import uuid4
 import threading
 import time
-
+import waitevents
+import selectors
 
 __VERSION__ = "1.0.0"
 
@@ -176,6 +176,7 @@ class MainApp(object):
 
     def stop_all(self):
         self.stop = True
+        self.stop_event.set()
         # Wait 8 second to finish thread
         time.sleep(8)
 
@@ -202,6 +203,7 @@ class MainApp(object):
         self.engine = None
         self.messages = None
         self.stop = False
+        self.stop_event = waitevents.WaitableEvent()
 
         # Logging configuration
         self.logger = logging.getLogger('sprinkler')
@@ -214,11 +216,11 @@ class MainApp(object):
 
         parser = argparse.ArgumentParser(
             description="Automatic sprinkler management - V{}"
-            .format(__VERSION__))
+                .format(__VERSION__))
         parser.add_argument('-d', '--debug',
                             help='activate debug messages on output',
                             action="store_true")
-        if(argv):
+        if (argv):
             args = parser.parse_args(*argv)
         else:
             args = parser.parse_args([])
@@ -241,7 +243,7 @@ class MainApp(object):
                 "Create default configuration file %s" % self._configfile)
             self.config['meteo'] = {
                 'url':
-                'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
+                    'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
             self.config['messages'] = {
                 'pubnub_subkey': 'sub-...',
                 'pubnub_pubkey': 'pub-...',
@@ -267,12 +269,18 @@ class MainApp(object):
         self.logger.addHandler(filehandler)
 
     def send_channel_state(self):
-        ev = self.engine.get_event_new_state()
-        while not self.stop:
-            if ev.is_set():
-                self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
-                ev.clear()
-            ev.wait(2)
+        engine_event = self.engine.get_event_new_state()
+        sel = selectors.DefaultSelector()
+        sel.register(engine_event, selectors.EVENT_READ, "New channel status")
+        sel.register(self.stop_event, selectors.EVENT_READ, "Stop")
+        keep_running = True
+        while keep_running:
+            for (ev, mask) in sel.select():
+                if ev.data == "Stop":
+                    keep_running = False
+                else:
+                    self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
+                    ev.fileobj.clear()
 
     def run(self):
         '''
@@ -288,6 +296,7 @@ class MainApp(object):
                                      id=self.config['messages']['id'])
 
             self.th_msg = threading.Thread(target=self.send_channel_state)
+            self.th_msg.start()
 
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
@@ -295,7 +304,7 @@ class MainApp(object):
             sys.exit(1)
 
         # Main loop
-        while(not self.stop):
+        while (not self.stop):
             if self.messages.is_message():
                 msg = self.messages.get_message()
                 try:
@@ -329,6 +338,7 @@ class MainApp(object):
             self.engine.stop()
         if self.messages is not None:
             self.messages.stop()
+
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY, sys.argv[1:])
