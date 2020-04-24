@@ -357,8 +357,6 @@ def test_2(launcher, confdir, caplog, pubnub_bot, setenv):
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
-
-    assert (msg.message['content'] == '{"status": "OK"}')
     assert "Channel Jardin (0) ON" in caplog.text
 
 @pytest.mark.functional
