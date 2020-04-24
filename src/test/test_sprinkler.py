@@ -336,7 +336,7 @@ def test_1(launcher, confdir, pubnub_bot, setenv):
     """ Test 'get program' command """
     logger = logging.getLogger('test')
     logger.setLevel(logging.DEBUG)
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "get program"}}).sync()
     logger.info('SEND: {"command": "get program"}')
 
 
@@ -344,7 +344,7 @@ def test_1(launcher, confdir, pubnub_bot, setenv):
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
     
-    json_msg = json.loads(msg.message['content'])
+    json_msg = msg.message['content']
 
     assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 5),\
         "Received message is: {}".format(msg['body'])
@@ -353,7 +353,8 @@ def test_1(launcher, confdir, pubnub_bot, setenv):
 @pytest.mark.functional
 def test_2(launcher, confdir, caplog, pubnub_bot, setenv):
     """ Test forced a channel ON """
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "force channel", "nb": "0", "action": "ON", "duration": "1"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "force channel", "nb": "0",
+                                                                    "action": "ON", "duration": "1"}}).sync()
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
@@ -364,65 +365,67 @@ def test_3(launcher, confdir, pubnub_bot, setenv):
     """ Send a new program and
     check that it is correctly take into account """
 
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "get program"}}).sync()
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
-    json_msg = json.loads(msg.message['content'])
+    json_msg = msg.message['content']
 
     assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 5),\
-        "Received message is: {}".format(msg.message['content'])
+        "Received message is: {}".format(json.loads(json_msg))
 
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{{"command": "new program", "program": {}}}'.format(NEW_CHANNEL_DB)}).sync()
-
-    msg = pubnub_bot.listener.message_queue.get(20)
-    if msg.publisher == pubnub_bot.uuid:
-        msg = pubnub_bot.listener.message_queue.get(20)
-    json_msg = json.loads(msg.message['content'])
-
-    assert (msg.message['content'] == '{"status": "OK"}'),\
-        "Received message is: {}".format(msg.message['sender'])
-
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "new program", "program":
+        json.loads(NEW_CHANNEL_DB)}}).sync()
 
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
-    json_msg = json.loads(msg.message['content'])
+    json_msg = msg.message['content']
+
+    assert (json_msg == {"status": "OK"}),\
+        "Received message is: {}".format(json.loads(json_msg))
+
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "get program"}}).sync()
+
+    msg = pubnub_bot.listener.message_queue.get(20)
+    if msg.publisher == pubnub_bot.uuid:
+        msg = pubnub_bot.listener.message_queue.get(20)
+    json_msg = msg.message['content']
 
     assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 6),\
-        "Received message is: {}".format(msg.message['content'])
+        "Received message is: {}".format(json.loads(json_msg))
 
 @pytest.mark.functional
 def test_4(launcher, confdir, pubnub_bot, setenv):
     """ Send a new channel and
     check that it is correctly take into account """
 
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "get program"}}).sync()
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
-    json_msg = json.loads(msg.message['content'])
+    json_msg = msg.message['content']
 
     assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 5),\
-        "Received message is: {}".format(msg.message['content'])
+        "Received message is: {}".format(json.loads(json_msg))
 
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{{"command": "new channel", "program": {}}}'.format(UPDATE_CHANNEL)}).sync()
-
-    msg = pubnub_bot.listener.message_queue.get(20)
-    if msg.publisher == pubnub_bot.uuid:
-        msg = pubnub_bot.listener.message_queue.get(20)
-    json_msg = json.loads(msg.message['content'])
-
-    assert (msg.message['content'] == '{"status": "OK"}'),\
-        "Received message is: {}".format(msg.message['sender'])
-
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"command": "get program"}'}).sync()
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "new channel", "program":
+        json.loads(UPDATE_CHANNEL)}}).sync()
 
     msg = pubnub_bot.listener.message_queue.get(20)
     if msg.publisher == pubnub_bot.uuid:
         msg = pubnub_bot.listener.message_queue.get(20)
-    json_msg = json.loads(msg.message['content'])
+    json_msg = msg.message['content']
+
+    assert (json_msg == {"status": "OK"}),\
+        "Received message is: {}".format(json.loads(json_msg))
+
+    pubnub_bot.publish().channel("sprinkler").message({"content": {"command": "get program"}}).sync()
+
+    msg = pubnub_bot.listener.message_queue.get(20)
+    if msg.publisher == pubnub_bot.uuid:
+        msg = pubnub_bot.listener.message_queue.get(20)
+    json_msg = msg.message['content']
 
     assert (json_msg['channels'][0]['progdays'][0]['stime']['hour'] == 6),\
-        "Received message is: {}".format(msg.message['content'])
+        "Received message is: {}".format(json.loads(json_msg))

@@ -283,7 +283,7 @@ class MainApp(object):
             if ev.data == "Stop":
                 keep_running = False
             else:
-                self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
+                self.messages.send({"channelstate": self.engine.get_channel_state()})
                 ev.fileobj.clear()
         self.logger.debug("Stop send message thread")
 
@@ -311,13 +311,13 @@ class MainApp(object):
                     p = cmdparser.Parser(msg)
                     if p.get_command() == 'get program':
                         data = self._database.read()
-                        self.messages.send(json.dumps(data))
+                        self.messages.send(data)
                     elif p.get_command() == 'force channel':
                         nb = p.get_param()['nb']
                         action = p.get_param()['action']
                         duration = p.get_param()['duration']
                         self.engine.channel_forced(nb, action, duration)
-                        self.messages.send('{"status": "OK"}')
+                        self.messages.send({"status": "OK"})
                     elif p.get_command() == 'new program' or p.get_command() == 'new channel':
                         program = p.get_param()['program']
                         if p.get_command() == 'new program':
@@ -328,12 +328,12 @@ class MainApp(object):
                         ch_list = upd.channels()
                         self.engine.stop()
                         self.engine = Engine(ch_list)
-                        self.messages.send('{"status": "OK"}')
+                        self.messages.send({"status": "OK"})
                     elif p.get_command() == 'get channels state':
-                        self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
+                        self.messages.send({"channelstate": self.engine.get_channel_state()})
 
                 except BaseException:
-                    self.logger.warning(f"Received unknown message: {msg}", exc_info=True)
+                    self.logger.warning(f"Received unknown message: {json.loads(msg)}", exc_info=True)
             else:
                 keep_running = False
         self.logger.debug("Stop main program")

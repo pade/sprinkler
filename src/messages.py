@@ -3,6 +3,7 @@
 
 import logging
 from queue import Empty
+import json
 import waitevents
 from pubnub.enums import PNStatusCategory
 from pubnub.pnconfiguration import PNConfiguration
@@ -30,7 +31,7 @@ class Messages:
             def message(self, pubnub, message):
                 if message.publisher != pubnub.uuid:
                     self._logger.debug(f"RECV from {message.publisher}: \
-                        {message.message['content']}")
+                        {json.dumps(message.message['content'])}")
                     super().message(pubnub, message.message['content'])
                     self._event.set()
 
@@ -59,7 +60,7 @@ class Messages:
         try:
             self.pubnub.publish().channel("sprinkler")\
                 .message({'content': msg}).sync()
-            self._logger.debug(f"SEND from {self.pubnub.uuid}: {msg}")
+            self._logger.debug(f"SEND from {self.pubnub.uuid}: {json.dumps(msg)}")
         except PubNubException as e:
             self._logger.error("Sending error: " + str(e))
 

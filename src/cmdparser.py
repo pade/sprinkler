@@ -21,22 +21,19 @@ class Parser(object):
     def _parse(self):
         """ Parse incoming message """
         try:
-            json_msg = json.loads(self.message)
-            self.command = json_msg['command']
+            self.command = self.message['command']
             if self.command not in command_list:
-                raise ParserError("Unknown command '{}'"
-                                  .format(self.command))
+                raise ParserError(f"Unknown command '{self.command}'")
             elif self.command == "force channel":
-                nb = int(json_msg['nb'])
-                action = json_msg['action']
-                duration = int(json_msg.get('duration', 0))
+                nb = int(self.message['nb'])
+                action = self.message['action']
+                duration = int(self.message.get('duration', 0))
                 if action not in action_list:
-                    raise ParserError("Unknown action '{}'"
-                                      .format(action))
+                    raise ParserError(f"Unknown action '{json.loads(action)}'")
                 self.param = {'nb': nb, 'action': action, 'duration': duration}
                 self.log.info(f"Received command '{self.command}' [nb={self.param['nb']}, action={self.param['action']}, duration={self.param['duration']}]")
             elif self.command == "new program" or self.command == "new channel":
-                program = json_msg['program']
+                program = self.message['program']
                 self.param = {'program': program}
                 self.log.info(f"Received command '{self.command}' [program={self.param['program']}]")
             else:
@@ -54,4 +51,4 @@ class Parser(object):
 class ParserError(Exception):
 
     def __init__(self, msg):
-        super().__init__(self, "Unknown message '{}'".format(msg))
+        super().__init__(self, f"Unknown message '{json.dumps(msg)}'")
