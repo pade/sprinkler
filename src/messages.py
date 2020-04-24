@@ -2,10 +2,8 @@
 
 
 import logging
-import sys
-from queue import Queue, Empty
-import json
-
+from queue import Empty
+import waitevents
 from pubnub.enums import PNStatusCategory
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.exceptions import PubNubException
@@ -13,7 +11,7 @@ from pubnub.pubnub import PubNub, SubscribeListener
 from pubnub.enums import PNReconnectionPolicy
 
 
-class Messages():
+class Messages:
     """Manage connexion with external device"""
 
     def __init__(self, subkey, pubkey, id):
@@ -24,20 +22,23 @@ class Messages():
         """
 
         class MySubscribeListener(SubscribeListener):
-            def __init__(self):
+            def __init__(self, event):
                 self._logger = logging.getLogger('sprinkler')
                 super().__init__()
+                self._event = event
 
             def message(self, pubnub, message):
                 if message.publisher != pubnub.uuid:
                     self._logger.debug(f"RECV from {message.publisher}: \
                         {message.message['content']}")
                     super().message(pubnub, message.message['content'])
+                    self._event.set()
 
         self._logger = logging.getLogger('sprinkler')
-
-        self.message_listener = MySubscribeListener()
+        self._event_new_message = waitevents.WaitableEvent()
+        self.message_listener = MySubscribeListener(self._event_new_message)
         self.messages = self.message_listener.message_queue
+
 
         pnconfig = PNConfiguration()
         pnconfig.subscribe_key = subkey
@@ -51,6 +52,9 @@ class Messages():
         self.pubnub.subscribe().channels('sprinkler').execute()
         self.message_listener.wait_for_connect()
 
+    def get_event_message(self):
+        return self._event_new_message
+
     def send(self, msg):
         try:
             self.pubnub.publish().channel("sprinkler")\
@@ -60,13 +64,14 @@ class Messages():
             self._logger.error("Sending error: " + str(e))
 
     def stop(self):
-        #self.pubnub.unsubscribe().channels('sprinkler').execute()
-        #try:
-        #    self.message_listener.wait_for_disconnect()
-        #except:
+        self.pubnub.unsubscribe().channels('sprinkler').execute()
+        try:
+            self.message_listener.wait_for_disconnect()
+        except:
             # Already disconnected
-        #    pass
+            pass
         self.pubnub.stop()
+        self._logger.debug("Message manager stopped")
 
     def get_message(self, timeout=None):
         try:

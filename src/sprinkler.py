@@ -12,6 +12,7 @@ from messages import Messages
 from database import Database
 
 import sys
+import os
 import os.path
 import argparse
 import logging
@@ -24,7 +25,6 @@ from uuid import uuid4
 import threading
 import time
 import waitevents
-import selectors
 
 __VERSION__ = "1.0.0"
 
@@ -156,14 +156,9 @@ DEFAULT_DATABASE = """
 
 
 class MainApp(object):
-    '''
-    Main application
-    '''
-
+    """ Main application """
     def exit_safe(self, signal_nb, stack):
-        '''
-        Safe exit: stop all thread before exiting
-        '''
+        """ Safe exit: stop all thread before exiting """
         if signal_nb == 15:
             sig = "SIGTERM"
         elif signal_nb == 2:
@@ -172,21 +167,16 @@ class MainApp(object):
             sig = "OTHER SIGNAL"
         self.logger.info(f"Terminated by user ({sig})")
         self.stop_all()
-        sys.exit()
 
     def stop_all(self):
-        self.stop = True
         self.stop_event.set()
-        # Wait 8 second to finish thread
-        time.sleep(8)
 
     def __init__(self, confdir, *argv):
-        '''
+        """
         Constructor
-        @param confdir: Configuration directory path
-        @param *argv: Command line argument
-        '''
-
+        :param confdir: Configuration directory path
+        :param argv: Command line argument
+        """
         # Create configuration directory if it does not exists
         if not os.path.isdir(confdir):
             try:
@@ -202,7 +192,6 @@ class MainApp(object):
         logfile = os.path.join(confdir, "sprinkler.log")
         self.engine = None
         self.messages = None
-        self.stop = False
         self.stop_event = waitevents.WaitableEvent()
 
         # Logging configuration
@@ -215,12 +204,11 @@ class MainApp(object):
         self.logger.addHandler(streamhandler)
 
         parser = argparse.ArgumentParser(
-            description="Automatic sprinkler management - V{}"
-                .format(__VERSION__))
+            description=f"Automatic sprinkler management - V{__VERSION__}")
         parser.add_argument('-d', '--debug',
                             help='activate debug messages on output',
                             action="store_true")
-        if (argv):
+        if argv:
             args = parser.parse_args(*argv)
         else:
             args = parser.parse_args([])
@@ -232,7 +220,6 @@ class MainApp(object):
         signal.signal(signal.SIGINT, self.exit_safe)
         # signal.signal(signal.SIGQUIT, self.exit_safe)
         signal.signal(signal.SIGTERM, self.exit_safe)
-
         # Create default configuration file if it does not exists
         self.config = configparser.ConfigParser()
         try:
@@ -262,30 +249,12 @@ class MainApp(object):
                 sys.exit(1)
 
         # Create log file
-        filehandler = logging.handlers.RotatingFileHandler(logfile,
-                                                           maxBytes=10000000,
-                                                           backupCount=5)
-        filehandler.setFormatter(formatter)
-        self.logger.addHandler(filehandler)
+        fdh = logging.handlers.RotatingFileHandler(logfile,
+                                                   maxBytes=10000000,
+                                                   backupCount=5)
+        fdh.setFormatter(formatter)
+        self.logger.addHandler(fdh)
 
-    def send_channel_state(self):
-        engine_event = self.engine.get_event_new_state()
-        sel = selectors.DefaultSelector()
-        sel.register(engine_event, selectors.EVENT_READ, "New channel status")
-        sel.register(self.stop_event, selectors.EVENT_READ, "Stop")
-        keep_running = True
-        while keep_running:
-            for (ev, mask) in sel.select():
-                if ev.data == "Stop":
-                    keep_running = False
-                else:
-                    self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
-                    ev.fileobj.clear()
-
-    def run(self):
-        '''
-        Main program
-        '''
         # Create channels from database
         try:
             upd = UpdateChannels(self._database)
@@ -303,9 +272,40 @@ class MainApp(object):
             self.stop_all()
             sys.exit(1)
 
+    def send_channel_state(self):
+        engine_event = self.engine.get_event_new_state()
+        multievent = waitevents.MultiEventWait()
+        multievent.register(engine_event, "New channel status")
+        multievent.register(self.stop_event, "Stop")
+        keep_running = True
+        while keep_running:
+            ev = multievent.select()
+            if ev.data == "Stop":
+                keep_running = False
+            else:
+                self.messages.send(json.dumps({"channelstate": self.engine.get_channel_state()}))
+                ev.fileobj.clear()
+        self.logger.debug("Stop send message thread")
+
+    def run(self):
+        th = threading.Thread(target=self._run)
+        th.start()
+        # Block until program finish
+        th.join()
+        print("Terminated")
+
+    def _run(self):
+        """ Main program """
+        new_msg_event = waitevents.MultiEventWait()
+        new_msg_event.register(self.messages.get_event_message(), "New message")
+        new_msg_event.register(self.stop_event, "Stop")
+        keep_running = True
         # Main loop
-        while (not self.stop):
-            if self.messages.is_message():
+        while (keep_running):
+            # Blocking call until a new message is present or stop event
+            ev = new_msg_event.select()
+            if ev.data == "New message":
+                ev.fileobj.clear()
                 msg = self.messages.get_message()
                 try:
                     p = cmdparser.Parser(msg)
@@ -334,12 +334,17 @@ class MainApp(object):
 
                 except BaseException:
                     self.logger.warning(f"Received unknown message: {msg}", exc_info=True)
+            else:
+                keep_running = False
+        self.logger.debug("Stop main program")
         if self.engine is not None:
             self.engine.stop()
         if self.messages is not None:
             self.messages.stop()
+        self.logger.debug("Main program is stopped")
 
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY, sys.argv[1:])
     app.run()
+

@@ -192,6 +192,10 @@ class Engine(object):
         self._sched.stop()
         for key in self._timer.keys():
             self._timer[key].join()
+        # Wait until scheduler thread stops
+        while self._sched.is_alive():
+            pass
+        self._logger.debug("Engine in now stopped")
 
     def channel_forced(self, nb, action, duration=0):
         """ Set channel action

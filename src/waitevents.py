@@ -1,5 +1,6 @@
 import os
 import select
+import selectors
 
 class WaitableEvent:
     """
@@ -36,3 +37,18 @@ class WaitableEvent:
     def __del__(self):
         os.close(self._read_fd)
         os.close(self._write_fd)
+
+class MultiEventWait(selectors.DefaultSelector):
+    def __init__(self):
+        super().__init__()
+
+    def register(self, fileobj, data=None):
+        super().register(fileobj, selectors.EVENT_READ, data)
+
+    def select(self, timeout=None):
+        for ev, mask in super().select(timeout):
+            return ev
+
+    def modify(self, fileobj, data=None):
+        super().unregister(fileobj)
+        super().register(fileobj, selectors.EVENT_READ, data)

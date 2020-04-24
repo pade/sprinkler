@@ -18,7 +18,7 @@ class BaseGpio(object):
         @param pConfig: HW configuration parameter
         '''
         self.hwcfg = pConfig
-        self._log = logging.getLogger()
+        self._log = logging.getLogger('sprinkler')
 
     def write(self, pchannel, pvalue):
         raise NotImplementedError

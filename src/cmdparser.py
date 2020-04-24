@@ -14,7 +14,7 @@ class Parser(object):
         self.message = msg
         self.command = None
         self.param = {}
-        self.log = logging.getLogger()
+        self.log = logging.getLogger('sprinkler')
 
         self._parse()
 
