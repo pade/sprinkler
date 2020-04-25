@@ -5,8 +5,7 @@ from scheduler import Scheduler
 from state import StateMachine
 import datetime
 import logging
-import timer
-import threading
+from threading import Timer
 import waitevents
 
 
@@ -32,8 +31,7 @@ class Engine(object):
             self._statemachine[ch.nb].register("ManualOff", self._manual_off, [ch])
             self._statemachine[ch.nb].setState("NotRunning")
             self._currentstate.append({'nb': ch.nb, 'state': "NotRunning"})
-            self._timer[ch.nb] = timer.Timer()
-            self._timer[ch.nb].start()
+            self._timer[ch.nb] = None
 
         self._oldstate = self._currentstate.copy()
         self._sched = Scheduler(self.run)
@@ -188,10 +186,9 @@ class Engine(object):
     def stop(self):
         """ Stop running engine """
         for key in self._timer.keys():
-            self._timer[key].stop()
+            if self._timer[key] is not None:
+                self._timer[key].cancel()
         self._sched.stop()
-        for key in self._timer.keys():
-            self._timer[key].join()
         # Wait until scheduler thread stops
         while self._sched.is_alive():
             pass
@@ -207,20 +204,22 @@ class Engine(object):
             if nb == ch.nb:
                 if action in ("OFF", "AUTO"):
                     self._logger.info(f"Channel {ch.name} ({ch.nb}) forced to {action}")
-                    self._timer[ch.nb].clear()
+                    if self._timer[ch.nb] is not None:
+                        self._timer[ch.nb].cancel()
                     ch.manual = action
                 elif action == "ON" and duration != 0:
                     self._logger.info(f"Channel {ch.name} ({ch.nb}) forced to ON for {duration} minutes")
                     self._save_channel_state(nb, "ManualOn", duration)
                     # Remove all already forced sprinkler
-                    self._timer[ch.nb].clear()
-                    self._timer[ch.nb].program(duration, self._stop_ch_after_delay, argument=(ch.nb,))
+                    if self._timer[ch.nb] is not None:
+                        self._timer[ch.nb].cancel()
+                    self._timer[ch.nb] = Timer(duration*60, self._stop_ch_after_delay, args=(ch.nb,))
+                    self._timer[ch.nb].start()
                     ch.manual = "ON"
                 self.run()
 
     def _stop_ch_after_delay(self, nb):
         """ Callback called to switch channel ch to AUTO after a delay """
-        import datetime
         self._logger.info(f"Channel n°{nb}: end of forced ON")
         for ch in self._channels:
             if nb == ch.nb:

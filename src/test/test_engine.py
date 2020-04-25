@@ -310,7 +310,7 @@ def test_forcedOnDuration(channel, eng):
     eng.channel_forced(0, "ON", 2)
     assert(channel.hw1.cmd)
     starttime = datetime.now()
-    while (datetime.now() < starttime + timedelta(minutes=3)) or channel.hw1.cmd:
+    while (datetime.now() < starttime + timedelta(minutes=2, seconds=20)) and channel.hw1.cmd:
         pass
     assert(not channel.hw1.cmd)
     
@@ -326,7 +326,7 @@ def test_forcedOnDurationBoth(channel, eng):
     assert(channel.hw1.cmd)
     eng.channel_forced(0, "ON", 1)
     starttime = datetime.now()
-    while (datetime.now() < starttime + timedelta(minutes=2)) or channel.hw1.cmd:
+    while (datetime.now() < starttime + timedelta(minutes=1, seconds=20)) and channel.hw1.cmd:
         pass
     assert(not channel.hw1.cmd)
     
