@@ -283,6 +283,7 @@ class MainApp(object):
             if ev.data == "Stop":
                 keep_running = False
             else:
+                data = {"channelstate": self.engine.get_channel_state()}
                 self.messages.send({"channelstate": self.engine.get_channel_state()})
                 ev.fileobj.clear()
         self.logger.debug("Stop send message thread")

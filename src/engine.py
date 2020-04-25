@@ -21,7 +21,7 @@ class Engine(object):
         self._statemachine = {}
         self.__savestartdate = {}
         self.__saveenddate = {}
-        self._currentstate = []
+        self._currentstate = {}
         self._timer = {}
         for ch in self._channels:
             self._statemachine[ch.nb] = StateMachine()
@@ -30,7 +30,7 @@ class Engine(object):
             self._statemachine[ch.nb].register("ManualOn", self._manual_on, [ch])
             self._statemachine[ch.nb].register("ManualOff", self._manual_off, [ch])
             self._statemachine[ch.nb].setState("NotRunning")
-            self._currentstate.append({'nb': ch.nb, 'state': "NotRunning"})
+            self._currentstate[ch.nb] = {'nb': ch.nb, 'state': "NotRunning"}
             self._timer[ch.nb] = None
 
         self._oldstate = self._currentstate.copy()
@@ -156,32 +156,16 @@ class Engine(object):
                 channel.running = False
                 self._save_channel_state(channel.nb, "NotRunning")
 
-    def get_current_state(self):
-        return self._currentstate
-
-    def _save_channel_state(self, channelnb, state, duration=0):
-        found = False
-        for index, elem in enumerate(self._currentstate):
-            if elem['nb'] == channelnb:
-                # replace current value
-                if state == "ManualOn":
-                    self._currentstate[index] = {'nb': channelnb, 'state': state, 'duration': duration}
-                else:
-                    self._currentstate[index] = {'nb': channelnb, 'state': state}
-                # stop the function
-                found = True
-                break
-        # if no previous element is found
-        if not found:
-            if state == "ManualOn":
-                self._currentstate.append({'nb': channelnb, 'state': state, 'duration': duration})
-            else:
-                self._currentstate.append({'nb': channelnb, 'state': state})
+    def _save_channel_state(self, channel_nb, state, duration=0):
+        # replace current value
+        if state == "ManualOn":
+            self._currentstate[channel_nb] = {'nb': channel_nb, 'state': state, 'duration': duration}
+        else:
+            self._currentstate[channel_nb] = {'nb': channel_nb, 'state': state}
         # Notify if there is some change
-        if self._currentstate != self._oldstate:
+        if self._currentstate[channel_nb] != self._oldstate[channel_nb]:
             self._event_new_state.set()
-            self._oldstate = self._currentstate.copy()
-
+            self._oldstate[channel_nb] = self._currentstate[channel_nb]
 
     def stop(self):
         """ Stop running engine """
@@ -204,6 +188,10 @@ class Engine(object):
             if nb == ch.nb:
                 if action in ("OFF", "AUTO"):
                     self._logger.info(f"Channel {ch.name} ({ch.nb}) forced to {action}")
+                    if action == "OFF":
+                        self._save_channel_state(nb, "ManualOff")
+                    else:
+                        self._save_channel_state(nb, "NotRunning")
                     if self._timer[ch.nb] is not None:
                         self._timer[ch.nb].cancel()
                     ch.manual = action
@@ -227,5 +215,5 @@ class Engine(object):
                 self.run()
 
     def get_channel_state(self):
-        return self._currentstate
+        return [ x for x in self._currentstate.values()]
 
