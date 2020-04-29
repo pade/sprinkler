@@ -2,13 +2,11 @@
 
 
 import logging
-from queue import Empty
 import json
-import waitevents
-from pubnub.enums import PNStatusCategory
+import asyncio
 from pubnub.pnconfiguration import PNConfiguration
-from pubnub.exceptions import PubNubException
-from pubnub.pubnub import PubNub, SubscribeListener
+from pubnub.enums import PNStatusCategory
+from pubnub.pubnub_asyncio import PubNubAsyncio, SubscribeListener
 from pubnub.enums import PNReconnectionPolicy
 
 
@@ -23,23 +21,40 @@ class Messages:
         """
 
         class MySubscribeListener(SubscribeListener):
-            def __init__(self, event):
+            def __init__(self):
                 self._logger = logging.getLogger('sprinkler')
                 super().__init__()
-                self._event = event
+
+            def status(self, pubnub, status):
+                if status.category == PNStatusCategory.PNUnexpectedDisconnectCategory:
+                    # This event happens when radio / connectivity is lost
+                    self._logger.error("Unexpected disconnection")
+
+                elif status.category == PNStatusCategory.PNConnectedCategory:
+                    # Connect event. You can do stuff like publish, and know you'll get it.
+                    # Or just use the connected event to confirm you are subscribed for
+                    # UI / internal notifications, etc
+                    self._logger.info("Connection OK")
+
+                elif status.category == PNStatusCategory.PNReconnectedCategory:
+                    # Happens as part of our regular operation. This event happens when
+                    # radio / connectivity is lost, then regained.
+                    self._logger.info("Reconnection OK")
+                elif status.category == PNStatusCategory.PNDecryptionErrorCategory:
+                    # Handle message decryption error. Probably client configured to
+                    # encrypt messages and on live data feed it received plain text.
+                    self._logger.error("Decryption error")
+                super().status(pubnub, status)
 
             def message(self, pubnub, message):
                 if message.publisher != pubnub.uuid:
                     self._logger.debug(f"RECV from {message.publisher}: \
                         {json.dumps(message.message['content'])}")
                     super().message(pubnub, message.message['content'])
-                    self._event.set()
 
         self._logger = logging.getLogger('sprinkler')
-        self._event_new_message = waitevents.WaitableEvent()
-        self.message_listener = MySubscribeListener(self._event_new_message)
+        self.message_listener = MySubscribeListener()
         self.messages = self.message_listener.message_queue
-
 
         pnconfig = PNConfiguration()
         pnconfig.subscribe_key = subkey
@@ -48,37 +63,32 @@ class Messages:
         pnconfig.ssl = True
         pnconfig.reconnect_policy = PNReconnectionPolicy.LINEAR
         pnconfig.subscribe_timeout = 20
-        self.pubnub = PubNub(pnconfig)
+        self.pubnub = PubNubAsyncio(pnconfig)
         self.pubnub.add_listener(self.message_listener)
         self.pubnub.subscribe().channels('sprinkler').execute()
-        self.message_listener.wait_for_connect()
 
-    def get_event_message(self):
-        return self._event_new_message
+    def publish_callback(self, task):
+        exception = task.exception()
+        if exception is not None:
+            self._logger.error(f"Sending error: {str(exception)}")
 
-    def send(self, msg):
-        try:
-            self.pubnub.publish().channel("sprinkler")\
-                .message({'content': msg}).sync()
-            self._logger.debug(f"SEND from {self.pubnub.uuid}: {json.dumps(msg)}")
-        except PubNubException as e:
-            self._logger.error("Sending error: " + str(e))
+    async def send(self, msg):
+        t = asyncio.create_task(self.pubnub.publish().channel("sprinkler").message({'content': msg}).future()). \
+            add_done_callback(self.publish_callback)
+        self._logger.debug(f"SEND from {self.pubnub.uuid}: {json.dumps(msg)}")
 
-    def stop(self):
-        self.pubnub.unsubscribe().channels('sprinkler').execute()
-        try:
-            self.message_listener.wait_for_disconnect()
-        except:
+    async def stop(self):
+        #self.pubnub.unsubscribe().channels('sprinkler').execute()
+        #try:
+        #    self.message_listener.wait_for_disconnect()
+        #except:
             # Already disconnected
-            pass
-        self.pubnub.stop()
+        #    pass
+        await self.pubnub.stop()
         self._logger.debug("Message manager stopped")
 
-    def get_message(self, timeout=None):
-        try:
-            return self.messages.get(block=(timeout is not None), timeout=timeout)
-        except Empty:
-            return None
+    async def get_message(self):
+        return await self.messages.get()
 
     def is_message(self):
         return not self.messages.empty()

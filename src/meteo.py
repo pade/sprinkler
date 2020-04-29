@@ -5,9 +5,6 @@ Created on 12 sept. 2016
 @author: dassierp
 '''
 
-import requests
-import multiprocessing
-
 
 class Meteo(object):
     '''

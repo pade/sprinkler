@@ -5,17 +5,17 @@ from scheduler import Scheduler
 from state import StateMachine
 import datetime
 import logging
-from threading import Timer
-import waitevents
+import timer
+import asyncio
 
 
 class Engine(object):
     """Core of the application"""
 
     def __init__(self, channels):
-        '''
-        @param channels: a list of Channel object
-        '''
+        """
+        :param channels: a list of Channel object
+        """
         super(Engine, self).__init__()
         self._channels = channels
         self._statemachine = {}
@@ -31,12 +31,12 @@ class Engine(object):
             self._statemachine[ch.nb].register("ManualOff", self._manual_off, [ch])
             self._statemachine[ch.nb].setState("NotRunning")
             self._currentstate[ch.nb] = {'nb': ch.nb, 'state': "NotRunning"}
-            self._timer[ch.nb] = None
+            self._timer[ch.nb] = timer.Timer()
 
         self._oldstate = self._currentstate.copy()
         self._sched = Scheduler(self.run)
         self._logger = logging.getLogger('sprinkler')
-        self._event_new_state = waitevents.WaitableEvent()
+        self._event_new_state = asyncio.Event()
 
     def get_event_new_state(self):
         return self._event_new_state
@@ -170,20 +170,15 @@ class Engine(object):
     def stop(self):
         """ Stop running engine """
         for key in self._timer.keys():
-            if self._timer[key] is not None:
-                self._timer[key].cancel()
+            self._timer[key].cancel()
         self._sched.stop()
-        # Wait until scheduler thread stops
-        while self._sched.is_alive():
-            pass
         self._logger.debug("Engine in now stopped")
 
     def channel_forced(self, nb, action, duration=0):
         """ Set channel action
-        @param nb: channel number
-        @param action: channel action. "ON", "OFF", "AUTO"
-        @param duration: when action is ON, the duration in minutes of the sprinkler
-        """
+        :param nb: channel number
+        :param action: channel action. "ON", "OFF", "AUTO"
+        :param duration: when action is ON, the duration in minutes of the sprinkler"""
         for ch in self._channels:
             if nb == ch.nb:
                 if action in ("OFF", "AUTO"):
@@ -192,21 +187,18 @@ class Engine(object):
                         self._save_channel_state(nb, "ManualOff")
                     else:
                         self._save_channel_state(nb, "NotRunning")
-                    if self._timer[ch.nb] is not None:
-                        self._timer[ch.nb].cancel()
+                    self._timer[ch.nb].cancel()
                     ch.manual = action
                 elif action == "ON" and duration != 0:
                     self._logger.info(f"Channel {ch.name} ({ch.nb}) forced to ON for {duration} minutes")
                     self._save_channel_state(nb, "ManualOn", duration)
                     # Remove all already forced sprinkler
-                    if self._timer[ch.nb] is not None:
-                        self._timer[ch.nb].cancel()
-                    self._timer[ch.nb] = Timer(duration*60, self._stop_ch_after_delay, args=(ch.nb,))
-                    self._timer[ch.nb].start()
+                    self._timer[ch.nb].cancel()
+                    self._timer[ch.nb] = timer.Timer(duration*60, self._stop_ch_after_delay, args=(ch.nb,))
                     ch.manual = "ON"
                 self.run()
 
-    def _stop_ch_after_delay(self, nb):
+    async def _stop_ch_after_delay(self, nb):
         """ Callback called to switch channel ch to AUTO after a delay """
         self._logger.info(f"Channel n°{nb}: end of forced ON")
         for ch in self._channels:
@@ -215,5 +207,5 @@ class Engine(object):
                 self.run()
 
     def get_channel_state(self):
-        return [ x for x in self._currentstate.values()]
+        return [x for x in self._currentstate.values()]
 

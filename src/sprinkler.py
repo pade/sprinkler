@@ -22,9 +22,7 @@ import signal
 import json
 import cmdparser
 from uuid import uuid4
-import threading
-import time
-import waitevents
+import asyncio
 
 __VERSION__ = "1.0.0"
 
@@ -169,7 +167,7 @@ class MainApp(object):
         self.stop_all()
 
     def stop_all(self):
-        self.stop_event.set()
+        pass
 
     def __init__(self, confdir, *argv):
         """
@@ -192,7 +190,6 @@ class MainApp(object):
         logfile = os.path.join(confdir, "sprinkler.log")
         self.engine = None
         self.messages = None
-        self.stop_event = waitevents.WaitableEvent()
 
         # Logging configuration
         self.logger = logging.getLogger('sprinkler')
@@ -214,8 +211,11 @@ class MainApp(object):
             args = parser.parse_args([])
 
         if args.debug:
+            self.debug = True
             self.logger.setLevel(logging.DEBUG)
             self.logger.debug("Debug mode activated")
+        else:
+            self.debug = False
 
         signal.signal(signal.SIGINT, self.exit_safe)
         # signal.signal(signal.SIGQUIT, self.exit_safe)
@@ -255,97 +255,84 @@ class MainApp(object):
         fdh.setFormatter(formatter)
         self.logger.addHandler(fdh)
 
+    async def send_channel_state(self):
+        engine_event = self.engine.get_event_new_state()
+        keep_running = True
+        while keep_running:
+            await engine_event.wait()
+            await self.messages.send({"channelstate": self.engine.get_channel_state()})
+            engine_event.clear()
+        self.logger.debug("Stop send message task")
+
+    def loop(self):
+        asyncio.run(app.run(), debug=self.debug)
+
+    async def run(self):
+        t = asyncio.create_task(self._run())
+        await t
+        print("Terminated")
+
+    async def _run(self):
+        """ Main program """
         # Create channels from database
         try:
             upd = UpdateChannels(self._database)
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
+            task_msg = asyncio.create_task(self.send_channel_state())
             self.messages = Messages(subkey=self.config['messages']['pubnub_subkey'],
                                      pubkey=self.config['messages']['pubnub_pubkey'],
                                      id=self.config['messages']['id'])
-
-            self.th_msg = threading.Thread(target=self.send_channel_state)
-            self.th_msg.start()
-
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
             self.stop_all()
             sys.exit(1)
 
-    def send_channel_state(self):
-        engine_event = self.engine.get_event_new_state()
-        multievent = waitevents.MultiEventWait()
-        multievent.register(engine_event, "New channel status")
-        multievent.register(self.stop_event, "Stop")
-        keep_running = True
-        while keep_running:
-            ev = multievent.select()
-            if ev.data == "Stop":
-                keep_running = False
-            else:
-                data = {"channelstate": self.engine.get_channel_state()}
-                self.messages.send({"channelstate": self.engine.get_channel_state()})
-                ev.fileobj.clear()
-        self.logger.debug("Stop send message thread")
-
-    def run(self):
-        th = threading.Thread(target=self._run)
-        th.start()
-        # Block until program finish
-        th.join()
-        print("Terminated")
-
-    def _run(self):
-        """ Main program """
-        new_msg_event = waitevents.MultiEventWait()
-        new_msg_event.register(self.messages.get_event_message(), "New message")
-        new_msg_event.register(self.stop_event, "Stop")
         keep_running = True
         # Main loop
         while (keep_running):
             # Blocking call until a new message is present or stop event
-            ev = new_msg_event.select()
-            if ev.data == "New message":
-                ev.fileobj.clear()
-                msg = self.messages.get_message()
-                try:
-                    p = cmdparser.Parser(msg)
-                    if p.get_command() == 'get program':
-                        data = self._database.read()
-                        self.messages.send(data)
-                    elif p.get_command() == 'force channel':
-                        nb = p.get_param()['nb']
-                        action = p.get_param()['action']
-                        duration = p.get_param()['duration']
-                        self.engine.channel_forced(nb, action, duration)
-                        self.messages.send({"status": "OK"})
-                    elif p.get_command() == 'new program' or p.get_command() == 'new channel':
-                        program = p.get_param()['program']
-                        if p.get_command() == 'new program':
-                            self._database.write(program)
-                        else:
-                            self._database.update_channels(program)
-                        upd = UpdateChannels(self._database)
-                        ch_list = upd.channels()
-                        self.engine.stop()
-                        self.engine = Engine(ch_list)
-                        self.messages.send({"status": "OK"})
-                    elif p.get_command() == 'get channels state':
-                        self.messages.send({"channelstate": self.engine.get_channel_state()})
+            msg = await self.messages.get_message()
+            try:
+                p = cmdparser.Parser(msg)
+                if p.get_command() == 'get program':
+                    data = self._database.read()
+                    await self.messages.send(data)
+                elif p.get_command() == 'force channel':
+                    nb = p.get_param()['nb']
+                    action = p.get_param()['action']
+                    duration = p.get_param()['duration']
+                    self.engine.channel_forced(nb, action, duration)
+                    await self.messages.send({"status": "OK"})
+                elif p.get_command() == 'new program' or p.get_command() == 'new channel':
+                    program = p.get_param()['program']
+                    if p.get_command() == 'new program':
+                        self._database.write(program)
+                    else:
+                        self._database.update_channels(program)
+                    upd = UpdateChannels(self._database)
+                    ch_list = upd.channels()
+                    self.engine.stop()
+                    task_msg.cancel()
+                    self.engine = Engine(ch_list)
+                    task_msg = asyncio.create_task(self.send_channel_state())
+                    await task_msg
+                    await self.messages.send({"status": "OK"})
+                elif p.get_command() == 'get channels state':
+                    await self.messages.send({"channelstate": self.engine.get_channel_state()})
 
-                except BaseException:
-                    self.logger.warning(f"Received unknown message: {json.loads(msg)}", exc_info=True)
-            else:
-                keep_running = False
+            except BaseException:
+                self.logger.warning(f"Received unknown message: {json.loads(msg)}", exc_info=True)
+
         self.logger.debug("Stop main program")
         if self.engine is not None:
             self.engine.stop()
         if self.messages is not None:
-            self.messages.stop()
+            await self.messages.stop()
         self.logger.debug("Main program is stopped")
 
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY, sys.argv[1:])
-    app.run()
+    app.loop()
 

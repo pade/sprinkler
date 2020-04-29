@@ -15,7 +15,7 @@ class BaseGpio(object):
     def __init__(self, pConfig):
         '''
         Constructor
-        @param pConfig: HW configuration parameter
+        :param pConfig: HW configuration parameter
         '''
         self.hwcfg = pConfig
         self._log = logging.getLogger('sprinkler')

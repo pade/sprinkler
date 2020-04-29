@@ -2,21 +2,19 @@
 
 import sys
 import os
+from pubnub.pubnub_asyncio import PubNubAsyncio, SubscribeListener
 from pubnub.pnconfiguration import PNConfiguration
-from pubnub.pubnub import PubNub, SubscribeListener
-import pubnub
-from uuid import uuid4
-from pathlib import Path
 import logging
 import pytest
-from queue import Empty
+import aiohttp
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import messages
 
-@pytest.fixture
-def pubnub_bot(setenv):
+
+@pytest.fixture(scope="function")
+async def pubnub_bot(setenv):
     pnconfig = PNConfiguration()
     pnconfig.subscribe_key = os.environ['SUBKEY']
     pnconfig.publish_key = os.environ['PUBKEY']
@@ -24,36 +22,49 @@ def pubnub_bot(setenv):
     pnconfig.uuid = "d301009f-f274-435d-b2bb-40735d944392"
     pnconfig.ssl = True
 
-    pubnub_bot = PubNub(pnconfig)
-    
+    pubnub_bot = PubNubAsyncio(pnconfig)
+
     yield pubnub_bot
     pubnub_bot.unsubscribe_all()
-    pubnub_bot.stop()
+    await pubnub_bot.stop()
 
-def test_receive(pubnub_bot, caplog, setenv):
+async def send(msg):
+    """ Send a JSON object
+    :param: msg: JSON object to send
+    """
+    pubkey = os.environ['PUBKEY']
+    subkey = os.environ['SUBKEY']
+    id = "d301009f-f274-435d-b2bb-40735d944392"
+    channel = "sprinkler"
+    full_url = f"https://ps.pndsn.com/publish/{pubkey}/{subkey}/0/{channel}/0?uuid={id}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(full_url, json=msg) as resp:
+            assert resp.status == 200, f"Received {await resp.text()}"
+
+
+@pytest.mark.asyncio
+async def test_receive(caplog):
     """ Test PubNub receive """
-
     caplog.set_level(logging.DEBUG)
-    
     msg_con = messages.Messages(os.environ['SUBKEY'], os.environ['PUBKEY'], os.environ['PUBNUBID'])
-
     # purge message pipe
     while msg_con.is_message():
-        msg_con.get_message()
+        await msg_con.get_message()
 
-    pubnub.set_stream_logger('pubnub', logging.DEBUG)
-    pubnub_bot.publish().channel("sprinkler").message({"content": "Hello my friend :)!"}).sync()
-
-    msg = msg_con.get_message(20)  # wait until message is received
+    await send({"content": "Hello my friend :)!"})
+    msg = await msg_con.get_message()  # wait until message is received
     assert msg == "Hello my friend :)!", f"Received {msg}"
 
-    pubnub_bot.publish().channel("sprinkler").message({"content": '{"dummy": "data"}'}).sync()
-    msg = msg_con.get_message(10)  # wait until message is received
+    await send({"content": '{"dummy": "data"}'})
+    msg = await msg_con.get_message()  # wait until message is received
     assert msg == '{"dummy": "data"}', f"Received {msg}"
 
-    msg_con.stop()
+    await msg_con.stop()
 
-def test_send(pubnub_bot, caplog, setenv):
+
+@pytest.mark.asyncio
+async def test_send(pubnub_bot, caplog):
     """ Test PubNub send """
 
     caplog.set_level(logging.DEBUG, logger="sprinkler")
@@ -65,14 +76,12 @@ def test_send(pubnub_bot, caplog, setenv):
 
     # Empty message queue
     while not listener.message_queue.empty():
-        listener.message_queue.get()
+        await listener.message_queue.get()
 
     msg_con = messages.Messages(os.environ['SUBKEY'], os.environ['PUBKEY'], os.environ['PUBNUBID'])
-    msg_con.send("Test send message")
+    await msg_con.send("Test send message")
 
-    msg = listener.message_queue.get(20)
-    msg_con.stop()
+    msg = await listener.message_queue.get()
+    await msg_con.stop()
 
     assert msg.message['content'] == "Test send message"
-
-
