@@ -155,19 +155,21 @@ DEFAULT_DATABASE = """
 
 class MainApp(object):
     """ Main application """
-    def exit_safe(self, signal_nb, stack):
-        """ Safe exit: stop all thread before exiting """
+    async def exit_safe(self, signal_nb: int) -> None:
+        """ Safe exit: stop all tasks before exiting """
         if signal_nb == 15:
             sig = "SIGTERM"
         elif signal_nb == 2:
             sig = "SIGINT"
+        elif signal_nb == 255:
+            sig = "KEYBOARD INTERRUPT"
         else:
             sig = "OTHER SIGNAL"
-        self.logger.info(f"Terminated by user ({sig})")
-        self.stop_all()
+        self.logger.info(f"Terminated by signal ({sig})")
+        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        for task in tasks:
+            task.cancel()
 
-    def stop_all(self):
-        pass
 
     def __init__(self, confdir, *argv):
         """
@@ -217,9 +219,13 @@ class MainApp(object):
         else:
             self.debug = False
 
-        signal.signal(signal.SIGINT, self.exit_safe)
-        # signal.signal(signal.SIGQUIT, self.exit_safe)
-        signal.signal(signal.SIGTERM, self.exit_safe)
+        try:
+            loop = asyncio.get_event_loop()
+            loop.add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(self.exit_safe(signal.SIGINT)))
+            loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(self.exit_safe(signal.SIGTERM)))
+        except NotImplementedError:
+            # Signal are not implemented on this platform (i.e.: windows), so do'nt use it
+            pass
         # Create default configuration file if it does not exists
         self.config = configparser.ConfigParser()
         try:
@@ -264,13 +270,16 @@ class MainApp(object):
             engine_event.clear()
         self.logger.debug("Stop send message task")
 
-    def loop(self):
-        asyncio.run(app.run(), debug=self.debug)
-
-    async def run(self):
-        t = asyncio.create_task(self._run())
-        await t
-        print("Terminated")
+    def run(self):
+        loop = asyncio.get_event_loop()
+        try:
+            asyncio.run(self._run(), debug=self.debug)
+        except KeyboardInterrupt:
+            # Stop program (on Windows)
+            pass
+        finally:
+            self.logger.info("Successfully shutdown program")
+            loop.close()
 
     async def _run(self):
         """ Main program """
@@ -285,7 +294,6 @@ class MainApp(object):
                                      id=self.config['messages']['id'])
         except Exception:
             self.logger.info("FATAL ERROR", exc_info=True)
-            self.stop_all()
             sys.exit(1)
 
         keep_running = True
@@ -334,5 +342,5 @@ class MainApp(object):
 
 if __name__ == '__main__':
     app = MainApp(CONFIG_DIRECTORY, sys.argv[1:])
-    app.loop()
+    app.run()
 
