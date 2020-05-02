@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 jsonschema = "*"
 pubnub = "*"
-smbus = {version = "*",sys_platform = "== 'linux'"}
+aiohttp = "*"
 
 [dev-packages]
 pylint = "*"
@@ -20,3 +20,7 @@ aiohttp = "*"
 
 [requires]
 python_version = "3.7"
+
+[packages.smbus]
+version = "*"
+sys_platform = "== 'linux'"
