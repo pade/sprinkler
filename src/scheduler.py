@@ -39,7 +39,5 @@ class Scheduler:
             else:
                 target(args)
 
-
-    def stop(self):
-        self._logger.debug("Stop scheduler task")
+    def cancel(self):
         self._sched.cancel()

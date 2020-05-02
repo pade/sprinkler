@@ -167,13 +167,6 @@ class Engine(object):
             self._event_new_state.set()
             self._oldstate[channel_nb] = self._currentstate[channel_nb]
 
-    def stop(self):
-        """ Stop running engine """
-        for key in self._timer.keys():
-            self._timer[key].cancel()
-        self._sched.stop()
-        self._logger.debug("Engine in now stopped")
-
     def channel_forced(self, nb, action, duration=0):
         """ Set channel action
         :param nb: channel number
@@ -208,4 +201,9 @@ class Engine(object):
 
     def get_channel_state(self):
         return [x for x in self._currentstate.values()]
+
+    def stop(self):
+        for nb in self._timer:
+            self._timer[nb].cancel()
+        self._sched.cancel()
 

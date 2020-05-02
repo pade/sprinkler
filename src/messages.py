@@ -73,18 +73,18 @@ class Messages:
             self._logger.error(f"Sending error: {str(exception)}")
 
     async def send(self, msg):
-        t = asyncio.create_task(self.pubnub.publish().channel("sprinkler").message({'content': msg}).future()). \
+        asyncio.create_task(self.pubnub.publish().channel("sprinkler").message({'content': msg}).future()). \
             add_done_callback(self.publish_callback)
         self._logger.debug(f"SEND from {self.pubnub.uuid}: {json.dumps(msg)}")
 
-    async def stop(self):
-        #self.pubnub.unsubscribe().channels('sprinkler').execute()
-        #try:
-        #    self.message_listener.wait_for_disconnect()
-        #except:
+    def stop(self):
+        self.pubnub.unsubscribe().channels('sprinkler').execute()
+        try:
+            self.message_listener.wait_for_disconnect()
+        except:
             # Already disconnected
-        #    pass
-        await self.pubnub.stop()
+            pass
+        self.pubnub.stop()
         self._logger.debug("Message manager stopped")
 
     async def get_message(self):

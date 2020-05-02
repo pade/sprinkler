@@ -23,6 +23,7 @@ import json
 import cmdparser
 from uuid import uuid4
 import asyncio
+import functools
 
 __VERSION__ = "1.0.0"
 
@@ -153,24 +154,22 @@ DEFAULT_DATABASE = """
 """
 
 
+async def exit_safe(signal_nb: int, cur_task: asyncio.Task) -> None:
+    """ Safe exit: stop all tasks before exiting """
+    logger = logging.getLogger("sprinkler")
+    if signal_nb == 15:
+        sig = "SIGTERM"
+    elif signal_nb == 2:
+        sig = "SIGINT"
+    elif signal_nb == 255:
+        sig = "KEYBOARD INTERRUPT"
+    else:
+        sig = "OTHER SIGNAL"
+    logger.info(f"Terminated by signal ({sig})")
+    cur_task.cancel()
+
 class MainApp(object):
     """ Main application """
-    async def exit_safe(self, signal_nb: int) -> None:
-        """ Safe exit: stop all tasks before exiting """
-        if signal_nb == 15:
-            sig = "SIGTERM"
-        elif signal_nb == 2:
-            sig = "SIGINT"
-        elif signal_nb == 255:
-            sig = "KEYBOARD INTERRUPT"
-        else:
-            sig = "OTHER SIGNAL"
-        self.logger.info(f"Terminated by signal ({sig})")
-        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-        for task in tasks:
-            task.cancel()
-
-
     def __init__(self, confdir, *argv):
         """
         Constructor
@@ -219,13 +218,6 @@ class MainApp(object):
         else:
             self.debug = False
 
-        try:
-            loop = asyncio.get_event_loop()
-            loop.add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(self.exit_safe(signal.SIGINT)))
-            loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(self.exit_safe(signal.SIGTERM)))
-        except NotImplementedError:
-            # Signal are not implemented on this platform (i.e.: windows), so do'nt use it
-            pass
         # Create default configuration file if it does not exists
         self.config = configparser.ConfigParser()
         try:
@@ -261,17 +253,14 @@ class MainApp(object):
         fdh.setFormatter(formatter)
         self.logger.addHandler(fdh)
 
-    async def send_channel_state(self):
-        engine_event = self.engine.get_event_new_state()
+    async def send_channel_state(self, event):
         keep_running = True
         while keep_running:
-            await engine_event.wait()
+            await event.wait()
             await self.messages.send({"channelstate": self.engine.get_channel_state()})
-            engine_event.clear()
-        self.logger.debug("Stop send message task")
+            event.clear()
 
     def run(self):
-        loop = asyncio.get_event_loop()
         try:
             asyncio.run(self._run(), debug=self.debug)
         except KeyboardInterrupt:
@@ -279,16 +268,24 @@ class MainApp(object):
             pass
         finally:
             self.logger.info("Successfully shutdown program")
-            loop.close()
 
     async def _run(self):
         """ Main program """
         # Create channels from database
         try:
+            loop = asyncio.get_event_loop()
+            signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
+            for s in signals:
+                cur_task = asyncio.current_task()
+                loop.add_signal_handler(s, lambda s=s: asyncio.create_task(exit_safe(s, cur_task)))
+        except NotImplementedError:
+            # Signal are not implemented on this platform (i.e.: windows), so do'nt use it
+            pass
+        try:
             upd = UpdateChannels(self._database)
             ch_list = upd.channels()
             self.engine = Engine(ch_list)
-            task_msg = asyncio.create_task(self.send_channel_state())
+            task_msg = asyncio.create_task(self.send_channel_state(self.engine.get_event_new_state()))
             self.messages = Messages(subkey=self.config['messages']['pubnub_subkey'],
                                      pubkey=self.config['messages']['pubnub_pubkey'],
                                      id=self.config['messages']['id'])
@@ -299,45 +296,46 @@ class MainApp(object):
         keep_running = True
         # Main loop
         while (keep_running):
-            # Blocking call until a new message is present or stop event
-            msg = await self.messages.get_message()
             try:
-                p = cmdparser.Parser(msg)
-                if p.get_command() == 'get program':
-                    data = self._database.read()
-                    await self.messages.send(data)
-                elif p.get_command() == 'force channel':
-                    nb = p.get_param()['nb']
-                    action = p.get_param()['action']
-                    duration = p.get_param()['duration']
-                    self.engine.channel_forced(nb, action, duration)
-                    await self.messages.send({"status": "OK"})
-                elif p.get_command() == 'new program' or p.get_command() == 'new channel':
-                    program = p.get_param()['program']
-                    if p.get_command() == 'new program':
-                        self._database.write(program)
-                    else:
-                        self._database.update_channels(program)
-                    upd = UpdateChannels(self._database)
-                    ch_list = upd.channels()
-                    self.engine.stop()
-                    task_msg.cancel()
-                    self.engine = Engine(ch_list)
-                    task_msg = asyncio.create_task(self.send_channel_state())
-                    await task_msg
-                    await self.messages.send({"status": "OK"})
-                elif p.get_command() == 'get channels state':
-                    await self.messages.send({"channelstate": self.engine.get_channel_state()})
+                # Blocking call until a new message is present or stop event
+                msg = await self.messages.get_message()
+                try:
+                    p = cmdparser.Parser(msg)
+                    if p.get_command() == 'get program':
+                        data = self._database.read()
+                        await self.messages.send(data)
+                    elif p.get_command() == 'force channel':
+                        nb = p.get_param()['nb']
+                        action = p.get_param()['action']
+                        duration = p.get_param()['duration']
+                        self.engine.channel_forced(nb, action, duration)
+                        await self.messages.send({"status": "OK"})
+                    elif p.get_command() == 'new program' or p.get_command() == 'new channel':
+                        program = p.get_param()['program']
+                        if p.get_command() == 'new program':
+                            self._database.write(program)
+                        else:
+                            self._database.update_channels(program)
+                        upd = UpdateChannels(self._database)
+                        ch_list = upd.channels()
+                        self.engine.stop()
+                        task_msg.cancel()
+                        self.engine = Engine(ch_list)
+                        task_msg = asyncio.create_task(self.send_channel_state(self.engine.get_event_new_state()))
+                        await self.messages.send({"status": "OK"})
+                    elif p.get_command() == 'get channels state':
+                        await self.messages.send({"channelstate": self.engine.get_channel_state()})
 
-            except BaseException:
-                self.logger.warning(f"Received unknown message: {json.loads(msg)}", exc_info=True)
-
-        self.logger.debug("Stop main program")
+                except BaseException:
+                    self.logger.warning(f"Received unknown message: {json.loads(msg)}", exc_info=True)
+            except asyncio.CancelledError:
+                keep_running = False
+        task_msg.cancel()
         if self.engine is not None:
             self.engine.stop()
         if self.messages is not None:
-            await self.messages.stop()
-        self.logger.debug("Main program is stopped")
+            self.messages.stop()
+        self.logger.info("Sprinkler program is stopped")
 
 
 if __name__ == '__main__':

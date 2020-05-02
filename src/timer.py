@@ -17,3 +17,4 @@ class Timer:
     def cancel(self):
         if hasattr(self, "_task"):
             self._task.cancel()
+
