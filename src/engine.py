@@ -9,14 +9,14 @@ import timer
 import asyncio
 
 
-class Engine(object):
+class Engine:
     """Core of the application"""
 
     def __init__(self, channels):
         """
         :param channels: a list of Channel object
         """
-        super(Engine, self).__init__()
+
         self._channels = channels
         self._statemachine = {}
         self.__savestartdate = {}

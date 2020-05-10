@@ -168,6 +168,7 @@ async def exit_safe(signal_nb: int, cur_task: asyncio.Task) -> None:
     logger.info(f"Terminated by signal ({sig})")
     cur_task.cancel()
 
+
 class MainApp(object):
     """ Main application """
     def __init__(self, confdir, *argv):
@@ -185,6 +186,7 @@ class MainApp(object):
                     "Impossible to create configuration directory %s" % confdir
                 )
                 sys.exit(1)
+        # Set 'confdir' to env. variable to let it accessible to
 
         self._configfile = os.path.join(confdir, "sprinkler.conf")
         self._database = Database(os.path.join(confdir, "channel.db"))
@@ -227,8 +229,8 @@ class MainApp(object):
             self.logger.info(
                 "Create default configuration file %s" % self._configfile)
             self.config['meteo'] = {
-                'url':
-                    'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/870500'}
+                'apikey': 'dummy-api-key',
+                'citykey': '134979'}
             self.config['messages'] = {
                 'pubnub_subkey': 'sub-...',
                 'pubnub_pubkey': 'pub-...',

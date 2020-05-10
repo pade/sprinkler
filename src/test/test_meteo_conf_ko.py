@@ -2,8 +2,6 @@
 
 import sys
 import os
-import asyncio
-import json
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -11,8 +9,7 @@ import meteo
 
 SPRINKLER_CONF = f"""
 [meteo]
-apikey: {os.environ['APIKEY']}
-citykey: 134979
+no_key = no_value
 """
 
 CHANNEL_DB = """
@@ -138,33 +135,7 @@ CHANNEL_DB = """
 }
 """
 
-
-def test_meteo_conf_ok(confdir):
+def test_meteo_conf_KO(confdir):
     m = meteo.Meteo(os.path.join(confdir, "sprinkler.conf"))
-    assert m.apikey == os.environ["APIKEY"]
-    assert m.citykey == "134979"
-    assert m.is_meteo
-
-
-def test_meteo_update_conf(confdir):
-    m1 = meteo.Meteo(os.path.join(confdir, "sprinkler.conf"))
-    m1.set_city("123456")
-    m2 = meteo.Meteo(os.path.join(confdir, "sprinkler.conf"))
-    assert m1.citykey == "123456"
-    assert m2.citykey == "123456"
-
-
-async def _test_get_meteo(tmpdir):
-    def callback(msg):
-        assert not msg['error'], json.dumps(msg['message'])
-
-    m = meteo.Meteo(os.path.join(tmpdir, "sprinkler.conf"))
-    m.get_meteo(callback)
-    await asyncio.sleep(3)
-    m.get_meteo(callback)
-    await asyncio.sleep(3)
-
-
-def test_get_meteo(confdir):
-    asyncio.run(_test_get_meteo(confdir))
+    assert not m.ismeteo
 
