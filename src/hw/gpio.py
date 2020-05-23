@@ -21,9 +21,11 @@ class BaseGpio(object):
         self._log = logging.getLogger('sprinkler')
 
     def write(self, pchannel, pvalue):
+        # pchannel from 0 to 3
         raise NotImplementedError
 
     def read(self, pchannel):
+        # pchannel from 0 to 3
         raise NotImplementedError
 
 
