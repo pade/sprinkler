@@ -1,11 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-'''
-Created on 9 sept. 2016
-
-@author: dassierp
-'''
-
 from update_channels import UpdateChannels
 from engine import Engine
 from messages import Messages
@@ -23,7 +17,6 @@ import json
 import cmdparser
 from uuid import uuid4
 import asyncio
-import functools
 
 __VERSION__ = "1.0.0"
 
@@ -181,7 +174,7 @@ class MainApp(object):
         if not os.path.isdir(confdir):
             try:
                 os.mkdir(confdir)
-            except Exception:
+            except (FileExistsError, OSError):
                 print(
                     "Impossible to create configuration directory %s" % confdir
                 )
@@ -224,7 +217,7 @@ class MainApp(object):
         self.config = configparser.ConfigParser()
         try:
             self.config.read_file(open(self._configfile))
-        except Exception:
+        except FileNotFoundError:
             # File does not exist: must create one with default parameters
             self.logger.info(
                 "Create default configuration file %s" % self._configfile)
@@ -244,7 +237,7 @@ class MainApp(object):
             try:
                 with open(self._database.dbfile, 'w') as f:
                     f.write(DEFAULT_DATABASE)
-            except Exception:
+            except OSError:
                 self.logger.info("FATAL ERROR", exc_info=True)
                 sys.exit(1)
 
@@ -297,7 +290,7 @@ class MainApp(object):
 
         keep_running = True
         # Main loop
-        while (keep_running):
+        while keep_running:
             try:
                 # Blocking call until a new message is present or stop event
                 msg = await self.messages.get_message()

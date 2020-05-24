@@ -167,4 +167,3 @@ async def _test_get_meteo(tmpdir):
 
 def test_get_meteo(confdir):
     asyncio.run(_test_get_meteo(confdir))
-

@@ -41,7 +41,8 @@ class Engine:
     def get_event_new_state(self):
         return self._event_new_state
 
-    def get_datetime_now(self):
+    @staticmethod
+    def get_datetime_now():
         return datetime.datetime.now()
 
     def run(self):
@@ -101,7 +102,8 @@ class Engine:
                             self._logger.debug(f"{channel.name} End date: {self.__saveenddate[channel.nb].isoformat()}")
                             self._logger.debug(f"Now: {now.isoformat()}")
 
-                            channel_status.append(self.__savestartdate[channel.nb] <= now and self.__saveenddate[channel.nb] > now)
+                            channel_status.append(
+                                self.__savestartdate[channel.nb] <= now < self.__saveenddate[channel.nb])
 
             if True in channel_status:
                 channel.running = True
@@ -140,7 +142,7 @@ class Engine:
                             self._logger.debug(f"{channel.name} End date: {end.isoformat()}")
                             self._logger.debug(f"Now: {now.isoformat()}")
 
-                            channel_status.append(start <= now and end > now)
+                            channel_status.append(start <= now < end)
 
             if True in channel_status:
                 self._logger.info(f"Channel '{channel.name}' ({channel.nb}) is now ON ")
@@ -206,4 +208,3 @@ class Engine:
         for nb in self._timer:
             self._timer[nb].cancel()
         self._sched.cancel()
-
