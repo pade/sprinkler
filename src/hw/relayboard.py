@@ -10,7 +10,7 @@ class Relay(BaseGpio):
 
     def __init__(self):
         self.__config = configparser.ConfigParser()
-        self.__config.read_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "relayboard.conf"))
+        self.__config.read_file(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "relayboard.conf")))
         self.bus = smbus.SMBus(self.__config['default']['DEVICE_BUS'])
         super().__init__()
 
