@@ -6,7 +6,7 @@ from stime import STime
 from jsonvalidate import Validate
 import json
 try:
-    from hw.raspberry import RaspberryGpio as Gpio
+    from hw.relayboard import Relay as Gpio
 except:
     from hw.dummy import DummyGpio as Gpio
 
