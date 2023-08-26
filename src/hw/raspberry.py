@@ -1,6 +1,7 @@
 from .gpio import BaseGpio
 import os
 import RPi.GPIO as GPIO
+import json
 
 
 class RaspberryGpio(BaseGpio):
@@ -10,18 +11,16 @@ class RaspberryGpio(BaseGpio):
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)
         self.__channel = {}
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "raspberry.conf"), "r") as fd:
-           file_content = fd.readlines()
-        for l in file_content:
-            if l.startswith('#'):
-                continue
-            if ':' not in l:
-                # Ignore invalid lines
-                continue
-            chnb, pinnb = l.split(":")
-            self.__channel[int(chnb)] = int(pinnb)
-            GPIO.setup(int(pinnb), GPIO.OUT)
-
+        self.__waterPin = {'pin': None, 'inverted': False}
+        
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "raspberry.json"), "r") as fd:
+            config = json.load(fd)
+            for channel in config['channels']:
+                self.__channel[channel['channel']] = channel['pin']
+                GPIO.setup(channel['pin'], GPIO.out)
+            self.__waterPin['pin'] = config['water_level']['pin']
+            self.__waterPin['inverted'] = config['water_level']['inverted']
+            GPIO(self.__waterPin['pin'], GPIO.IN)
         super(RaspberryGpio, self).__init__()
 
     def write(self, pchannel, pvalue):
@@ -36,3 +35,9 @@ class RaspberryGpio(BaseGpio):
                 return GPIO.input(self.__channel[key])
         self._log.error(f"Channel n°{pchannel} is not found in channel list")
 
+    def isWater(self):
+        pinValue = GPIO.input(self.__waterPin['pin'])
+        if self.__waterPin['inverted']:
+            return  not pinValue
+        else:
+            return pinValue

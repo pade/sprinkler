@@ -31,4 +31,18 @@ def test_channel_ok():
             json_string = fd.read()
             json_object = json.loads(json_string)
     jsv.validate_channel(json_object)
+
+def test_raspberry_ok():
+    """ Test a well formated Raspberry configuration file"""
+    jsv = jsonvalidate.Validate()
+    jsv.validate_raspberry({
+        'channels': [
+            {'pin': 1, 'channel': 2},
+            {'pin': 2, 'channel': 0}
+        ],
+        'water_level': {
+            'pin': 1,
+            'inverted': True
+        }
+    })
     

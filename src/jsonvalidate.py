@@ -155,6 +155,43 @@ schema = {
     "required": ["channels"],
 }
 
+raspberry = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Channels",
+    "description": "Channels configuration description",
+    "type": "object",
+    "properties": {
+        "channels": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["channel", "pin"],
+                "property": {
+                    "channel": {
+                        "type": "number"
+                    },
+                    "pin": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "water_level": {
+            "type": "object",
+            "properties": {
+                "pin": {
+                    "type": "number"
+                },
+                "inverted": {
+                    "type": "boolean"
+                }
+            },
+            "required": ["pin", "inverted"]
+        }
+    },
+    "required": ["channels", "water_level"]
+}
+
 
 class Validate():
     """ Validate JSON database against
@@ -194,4 +231,8 @@ class Validate():
 
     def validate_channel(self, json):
         validate(json, schema_channel)
+        return json
+
+    def validate_raspberry(self, json):
+        validate(json, raspberry)
         return json

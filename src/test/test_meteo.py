@@ -4,6 +4,9 @@ import sys
 import os
 import asyncio
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Set parent directory in path, to be able to import module
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -138,8 +141,7 @@ CHANNEL_DB = """
 }
 """
 
-
-def test_meteo_conf_ok(confdir):
+def test_meteo_conf_ok(confdir, setenv):
     m = meteo.Meteo(os.path.join(confdir, "sprinkler.conf"))
     assert m.apikey == os.environ["APIKEY"]
     assert m.citykey == "134979"

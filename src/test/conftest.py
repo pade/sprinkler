@@ -17,8 +17,10 @@ def setenv():
     if file_to_load.is_file():
         env_file.load(file_to_load)
         # Now PUBKEY, SUBKEY and PUBNUBID are defined
+        print('.env loaded')
     else:
         # .env not found, assuming anv variable are defined elsewhere
+        print('.env not found')
         pass 
     
 
