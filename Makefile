@@ -2,28 +2,17 @@
 
 .DEFAULT_GOAL := help
 
-PYTEST=pytest
-
-test: unit long_test functional
+UNITTEST = nose2 -v
+test: unit
 
 unit:
 	@echo "Running unit tests..."
-	$(PYTEST) -v -m 'not longtest and not functional' --ignore=sprinkler-env
-	@echo "Done."
-
-long_test:
-	@echo "Running long tests..."
-	$(PYTEST) -v -m 'longtest' --ignore=sprinkler-env
-	@echo "Done."
-
-functional:
-	@echo "Running functional tests..."
-	$(PYTEST) -v -m 'functional' --ignore=sprinkler-env
+	$(UNITTEST)
 	@echo "Done."
 
 cov:
 	@echo "Coverage..."
-	$(PYTEST) -v --cov-report html --cov
+	$(UNITTEST) --with-coverage --coverage-report html --coverage-report term
 	@echo "Done."
 
 pep8:
@@ -39,8 +28,6 @@ autopep8:
 help:
 	@echo "\nAvailable commands:"
 	@echo "\t-unit: Running unit tests"
-	@echo "\t-long_test: Running log duration tests"
-	@echo "\t-functional: Running functional tests"
 	@echo "\t-cov: Make coverage report"
 	@echo "\t-pep8: Checking PEP8 coding style"
 	@echo "\t-autopep8: Applying PEP8 (code is modified...)\n"
