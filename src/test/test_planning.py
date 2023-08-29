@@ -11,7 +11,7 @@ class TestPlanning(unittest.TestCase):
         return super().setUp()
 
     def test_addEvent(self):
-        """ Test adding an event """
+        """ Adding an event """
         event = SEvent(
             enable=True,
             days=Days.fromValues(False, False, False, False, False, False, False),
@@ -23,7 +23,7 @@ class TestPlanning(unittest.TestCase):
         self.assertEqual(len(self.planning._data), 1)
         
     def test_addEventWithId(self):
-        """ Test adding an event with ID """
+        """ Adding an event with ID """
         id = uuid4()
         event = SEvent(
             enable=True,
@@ -37,7 +37,7 @@ class TestPlanning(unittest.TestCase):
         self.assertIsNotNone(self.planning.findById(id))
     
     def test_remove_event(self):
-        """ Test remove an event """
+        """ Remove an event """
         event1 = SEvent(
             enable=True,
             days=Days.fromValues(False, False, False, False, False, False, False),
@@ -61,7 +61,7 @@ class TestPlanning(unittest.TestCase):
         self.assertIsNotNone(self.planning.findById(event2.id))
 
     def test_change_event(self):
-        """ Test change an event """
+        """ Change an event """
         event = SEvent(
             enable=True,
             days=Days.fromValues(False, False, False, False, False, False, False),
@@ -76,7 +76,7 @@ class TestPlanning(unittest.TestCase):
         self.assertEqual(event3.name, 'New name')
 
     def test_iteration(self):
-        """ Test iterate over events """
+        """ Iterate over events """
         for name in ('Name 1', 'Name 2', 'Name 3'):
             self.planning.addEvent(SEvent(
                 enable=True,
