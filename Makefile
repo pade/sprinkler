@@ -2,17 +2,17 @@
 
 .DEFAULT_GOAL := help
 
-UNITTEST = nose2 -v
-test: unit
+TEST_SCRIPT = ./src/test/runner.py
 
-unit:
+test:
 	@echo "Running unit tests..."
-	$(UNITTEST)
+	@coverage run $(TEST_SCRIPT)
 	@echo "Done."
 
-cov:
+cov: test
 	@echo "Coverage..."
-	$(UNITTEST) --with-coverage --coverage-report html --coverage-report term
+	@coverage report
+	@coverage html
 	@echo "Done."
 
 pep8:
@@ -25,11 +25,17 @@ autopep8:
 	@autopep8 -iva src/*.py
 	@echo "Done."
 
+clean:
+	@echo "Cleaning project..."
+	@rm -rf htmlcov .coverage
+	@echo "Done."
+
 help:
 	@echo "\nAvailable commands:"
-	@echo "\t-unit: Running unit tests"
+	@echo "\t-test: Running unit tests"
 	@echo "\t-cov: Make coverage report"
 	@echo "\t-pep8: Checking PEP8 coding style"
+	@echo "\t-clean: Clean project"
 	@echo "\t-autopep8: Applying PEP8 (code is modified...)\n"
 
 check: test pep8

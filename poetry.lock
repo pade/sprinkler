@@ -242,6 +242,21 @@ files = [
 ]
 
 [[package]]
+name = "blessings"
+version = "1.7"
+description = "A thin, practical wrapper around terminal coloring, styling, and positioning"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+files = [
+    {file = "blessings-1.7-py2-none-any.whl", hash = "sha256:caad5211e7ba5afe04367cdd4cfc68fa886e2e08f6f35e76b7387d2109ccea6e"},
+    {file = "blessings-1.7-py3-none-any.whl", hash = "sha256:b1fdd7e7a675295630f9ae71527a8ebc10bfefa236b3d6aa4932ee4462c17ba3"},
+    {file = "blessings-1.7.tar.gz", hash = "sha256:98e5854d805f50a5b58ac2333411b0482516a8210f23f43308baeb58d77c157d"},
+]
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "cbor2"
 version = "5.4.6"
 description = "CBOR (de)serializer with extensive tag support"
@@ -395,6 +410,21 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
+
+[[package]]
+name = "colour-runner"
+version = "0.1.1"
+description = "Colour formatting for unittest tests"
+optional = false
+python-versions = "*"
+files = [
+    {file = "colour-runner-0.1.1.tar.gz", hash = "sha256:38b1ad31ffc34a517a8b8e39026b63f6cbe165852c30e0912dc18e0c2f9939f9"},
+    {file = "colour_runner-0.1.1-py2.py3-none-any.whl", hash = "sha256:18227068941e455aec3dfe6c64e683bb0e53f56527529748994dc559b928c50d"},
+]
+
+[package.dependencies]
+blessings = "*"
+pygments = "*"
 
 [[package]]
 name = "coverage"
@@ -963,21 +993,6 @@ files = [
     {file = "multidict-6.0.4-cp39-cp39-win_amd64.whl", hash = "sha256:33029f5734336aa0d4c0384525da0387ef89148dc7191aae00ca5fb23d7aafc2"},
     {file = "multidict-6.0.4.tar.gz", hash = "sha256:3666906492efb76453c0e7b97f2cf459b0682e7402c0489a95484965dbc1da49"},
 ]
-
-[[package]]
-name = "nose2"
-version = "0.13.0"
-description = "unittest with plugins"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "nose2-0.13.0-py3-none-any.whl", hash = "sha256:e29017c9309fe2c8b8a1f1db7a0e7526acaba0c3990f32a0d961e6a7bc5cc190"},
-    {file = "nose2-0.13.0.tar.gz", hash = "sha256:57c68ad676ef4b88b50694937eb52f4943aa1ca261074b4909b6e163046b46f0"},
-]
-
-[package.extras]
-coverage-plugin = ["coverage"]
-dev = ["Sphinx", "sphinx-issues", "sphinx-rtd-theme"]
 
 [[package]]
 name = "packaging"
@@ -1848,4 +1863,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "fd24738a7350af3ce7a73f2ca897201644ca76e84eedacac286ace48ca411f12"
+content-hash = "0c2776aed0a29e70bc023c871c4c04e181ecb3dab525419e4fc3f78b5fa7b906"

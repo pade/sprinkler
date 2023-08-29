@@ -1,5 +1,6 @@
  # type: ignore 
 import unittest
+from colour_runner import runner
 from schedule.planning import Planning, SEvent, Days, STime
 from uuid import uuid4
 
@@ -10,6 +11,7 @@ class TestPlanning(unittest.TestCase):
         return super().setUp()
 
     def test_addEvent(self):
+        """ Test adding an event """
         event = SEvent(
             enable=True,
             days=Days.fromValues(False, False, False, False, False, False, False),
@@ -21,6 +23,7 @@ class TestPlanning(unittest.TestCase):
         self.assertEqual(len(self.planning._data), 1)
         
     def test_addEventWithId(self):
+        """ Test adding an event with ID """
         id = uuid4()
         event = SEvent(
             enable=True,
@@ -34,6 +37,7 @@ class TestPlanning(unittest.TestCase):
         self.assertIsNotNone(self.planning.findById(id))
     
     def test_remove_event(self):
+        """ Test remove an event """
         event1 = SEvent(
             enable=True,
             days=Days.fromValues(False, False, False, False, False, False, False),
@@ -57,6 +61,7 @@ class TestPlanning(unittest.TestCase):
         self.assertIsNotNone(self.planning.findById(event2.id))
 
     def test_change_event(self):
+        """ Test change an event """
         event = SEvent(
             enable=True,
             days=Days.fromValues(False, False, False, False, False, False, False),
@@ -71,6 +76,7 @@ class TestPlanning(unittest.TestCase):
         self.assertEqual(event3.name, 'New name')
 
     def test_iteration(self):
+        """ Test iterate over events """
         for name in ('Name 1', 'Name 2', 'Name 3'):
             self.planning.addEvent(SEvent(
                 enable=True,
@@ -82,6 +88,3 @@ class TestPlanning(unittest.TestCase):
         self.assertEqual(len(self.planning._data), 3)
         for event in self.planning:
             self.assertIn(event.name, ('Name 1', 'Name 2', 'Name 3'))
-
-if __name__ == '__main__':
-    unittest.main()
