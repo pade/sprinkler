@@ -1,10 +1,3 @@
-# -*- coding: UTF-8 -*-
-'''
-Created on 30 août 2016
-
-@author: dassierp
-'''
-
 import logging
 
 
@@ -19,11 +12,11 @@ class BaseGpio(object):
         '''
         self._log = logging.getLogger('sprinkler')
 
-    def write(self, pchannel, pvalue):
+    def write(self, channel: int, value: bool) -> None:
         # pchannel from 0 to 3
         raise NotImplementedError
 
-    def read(self, pchannel):
+    def read(self, channel: int) -> bool:
         # pchannel from 0 to 3
         raise NotImplementedError
 
