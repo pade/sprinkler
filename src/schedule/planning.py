@@ -52,13 +52,13 @@ class Days:
 
 class SEvent:
     """ Event definition """
-    def __init__(self, enable: bool, days: Days, channel: int, time: STime, name: str) -> None:
+    def __init__(self, enable: bool, days: Days, channel: int, time: STime, name: str, id: str='') -> None:
         self.name = name
         self.enable = enable
         self.days = days
         self.channel = channel
         self.time = time
-        self.id = uuid4()
+        self.id = uuid4() if id == '' else id
 
 class Planning:
     """ Manage plannings """
@@ -69,7 +69,7 @@ class Planning:
         self._index: int = 0
 
     def addEvent(self, event: SEvent) -> None:
-        self._data.append(event)
+        self._data.append(event)        
 
     def removeEvent(self, id: UUID) -> None:
         event = self.findById(id)
