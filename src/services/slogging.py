@@ -7,7 +7,7 @@ class SLogging(logging.getLoggerClass()):
     def __init__(self, name: str, level: str | int = 0) -> None:
         super().__init__(name, level)
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s [%(levelname)s]: %(message)s'
+            '%(asctime)s - %(name)s (line %(lineno)s) [%(levelname)s]: %(message)s'
         )
         streamhandler = logging.StreamHandler(sys.stdout)
         streamhandler.setFormatter(formatter)
@@ -16,6 +16,6 @@ class SLogging(logging.getLoggerClass()):
     def logCall(self, func):
         def wrapper(*args, **kwargs):
             self.debug(f'Calling: {func.__name__}({args}, {kwargs})')
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
         return wrapper
  

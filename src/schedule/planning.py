@@ -55,6 +55,7 @@ class Days:
 
 class SEvent:
     """ Event definition """
+    @logger.logCall
     def __init__(self, enable: bool, days: Days, channel: int, time: STime, name: str, id: str='') -> None:
         self.name = name
         self.enable = enable
@@ -71,14 +72,17 @@ class Planning:
         self._data: List[SEvent] = []
         self._index: int = 0
 
+    @logger.logCall
     def addEvent(self, event: SEvent) -> None:
         self._data.append(event)        
 
+    @logger.logCall
     def removeEvent(self, id: UUID) -> None:
         event = self.findById(id)
         if event:
             self._data.remove(event)
 
+    @logger.logCall
     def findById(self, id: UUID) -> SEvent | None:
         for event in self._data:
             if id == event.id:
