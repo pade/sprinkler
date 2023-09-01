@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-class SLogging(logging.getLoggerClass()):
+class Logging(logging.getLoggerClass()):
     
     def __init__(self, name: str, level: str | int = 0) -> None:
         super().__init__(name, level)

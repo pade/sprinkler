@@ -1,9 +1,9 @@
 from typing import Tuple, List
 from .stime import STime
 from uuid import uuid4, UUID
-from services.slogging import SLogging
+from services.slogging import Logging
 
-logger = SLogging(__name__)
+logger = Logging(__name__)
 
 class Days:
     """ Active days """
